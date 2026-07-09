@@ -3,10 +3,11 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { ChevronRight } from "lucide-react";
-import { getProducts, type ProductSort } from "@/lib/data/products";
-import { getCategoryBySlug, getCategoryTree } from "@/lib/data/categories";
+import { getProducts, getColourOptions, type ProductSort } from "@/lib/data/products";
+import { getCategoryBySlug, getCategoriesWithCounts } from "@/lib/data/categories";
 import { ProductGrid } from "@/components/storefront/product-grid";
 import { FilterSidebar } from "@/components/storefront/filters/filter-sidebar";
+import { MobileFilterDrawer } from "@/components/storefront/filters/mobile-filter-drawer";
 import { SortSelect } from "@/components/storefront/filters/sort-select";
 import { PaginationBar } from "@/components/storefront/pagination-bar";
 
@@ -15,7 +16,12 @@ export const dynamic = "force-dynamic";
 const PER_PAGE = 12;
 
 type Params = { slug: string[] };
-type SearchParams = Record<string, string | undefined>;
+type SearchParams = Record<string, string | string[] | undefined>;
+
+function toArray(value: string | string[] | undefined): string[] {
+  if (!value) return [];
+  return Array.isArray(value) ? value : [value];
+}
 
 export async function generateMetadata({ params }: { params: Promise<Params> }): Promise<Metadata> {
   const { slug } = await params;
@@ -44,13 +50,15 @@ export default async function CategoryPage({
   const page = Number(sp.page) || 1;
   const basePath = `/product-category/${slug.join("/")}`;
 
-  const [categories, { products, total }] = await Promise.all([
-    getCategoryTree(),
+  const [categories, colourOptions, { products, total }] = await Promise.all([
+    getCategoriesWithCounts(),
+    getColourOptions(),
     getProducts({
       categorySlug: currentSlug,
+      colours: toArray(sp.colour),
       minPrice: sp.minPrice ? Number(sp.minPrice) : undefined,
       maxPrice: sp.maxPrice ? Number(sp.maxPrice) : undefined,
-      inStockOnly: sp.inStock === "1",
+      inStockOnly: toArray(sp.inStock).includes("1"),
       sort: (sp.sort as ProductSort) || "newest",
       page,
       perPage: PER_PAGE,
@@ -92,13 +100,25 @@ export default async function CategoryPage({
         <div className="flex flex-col gap-8 lg:flex-row">
           <FilterSidebar
             categories={categories}
+            colours={colourOptions}
             basePath={basePath}
             activeCategorySlug={currentSlug}
             searchParams={sp}
+            showCategoryCheckboxes={false}
           />
           <div className="flex-1">
-            <div className="mb-6 flex items-center justify-between">
-              <p className="text-muted-foreground text-sm">{total} products</p>
+            <div className="mb-6 flex items-center justify-between gap-3">
+              <div className="flex items-center gap-3">
+                <MobileFilterDrawer
+                  categories={categories}
+                  colours={colourOptions}
+                  basePath={basePath}
+                  activeCategorySlug={currentSlug}
+                  searchParams={sp}
+                  showCategoryCheckboxes={false}
+                />
+                <p className="text-muted-foreground text-sm">{total} products</p>
+              </div>
               <SortSelect basePath={basePath} />
             </div>
             <ProductGrid products={products} />

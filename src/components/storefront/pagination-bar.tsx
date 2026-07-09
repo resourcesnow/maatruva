@@ -15,7 +15,7 @@ export function PaginationBar({
   totalPages,
 }: {
   basePath: string;
-  searchParams: Record<string, string | undefined>;
+  searchParams: Record<string, string | string[] | undefined>;
   currentPage: number;
   totalPages: number;
 }) {

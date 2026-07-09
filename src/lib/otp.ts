@@ -14,21 +14,21 @@ export function generateOtpCode() {
   return String(randomInt(100000, 999999));
 }
 
-export async function createOtp(phone: string) {
+export async function createOtp(identifier: string) {
   await connectDB();
 
-  const recent = await Otp.findOne({ phone }).sort({ createdAt: -1 });
+  const recent = await Otp.findOne({ identifier }).sort({ createdAt: -1 });
   if (recent && Date.now() - new Date(recent.createdAt ?? 0).getTime() < RESEND_COOLDOWN_MS) {
-    throw new Error("Please wait before requesting another OTP.");
+    throw new Error("Please wait before requesting another code.");
   }
 
   const code = generateOtpCode();
   const salt = randomBytes(16).toString("hex");
   const codeHash = `${salt}:${hashOtp(code, salt)}`;
 
-  await Otp.deleteMany({ phone });
+  await Otp.deleteMany({ identifier });
   await Otp.create({
-    phone,
+    identifier,
     codeHash,
     expiresAt: new Date(Date.now() + OTP_TTL_MS),
   });
@@ -36,10 +36,10 @@ export async function createOtp(phone: string) {
   return code;
 }
 
-export async function verifyOtpRecord(phone: string, code: string) {
+export async function verifyOtpRecord(identifier: string, code: string) {
   await connectDB();
 
-  const record = await Otp.findOne({ phone }).sort({ createdAt: -1 });
+  const record = await Otp.findOne({ identifier }).sort({ createdAt: -1 });
   if (!record) return false;
 
   if (record.expiresAt.getTime() < Date.now()) {

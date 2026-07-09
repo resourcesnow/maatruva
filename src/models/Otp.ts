@@ -1,7 +1,7 @@
 import { Schema, model, models, type InferSchemaType, type Model } from "mongoose";
 
 const otpSchema = new Schema({
-  phone: { type: String, required: true },
+  identifier: { type: String, required: true },
   codeHash: { type: String, required: true },
   expiresAt: { type: Date, required: true },
   attempts: { type: Number, default: 0 },
@@ -9,7 +9,7 @@ const otpSchema = new Schema({
 });
 
 otpSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });
-otpSchema.index({ phone: 1 });
+otpSchema.index({ identifier: 1 });
 
 export type OtpDoc = InferSchemaType<typeof otpSchema>;
 

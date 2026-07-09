@@ -6,3 +6,4 @@ export * from "./coupon";
 export * from "./review";
 export * from "./content";
 export * from "./user";
+export * from "./auth";

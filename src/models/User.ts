@@ -19,6 +19,7 @@ const userSchema = new Schema(
     name: { type: String, required: true, trim: true },
     email: { type: String, unique: true, sparse: true, lowercase: true, trim: true },
     phone: { type: String, unique: true, sparse: true, trim: true },
+    password: { type: String, select: false },
     emailVerified: { type: Date, default: null },
     phoneVerified: { type: Date, default: null },
     googleId: { type: String },

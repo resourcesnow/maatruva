@@ -4,11 +4,40 @@ import { authConfig } from "./auth.config";
 import { connectDB } from "./db";
 import { User } from "@/models/User";
 import { verifyOtpRecord } from "./otp";
+import { verifyPassword } from "./password";
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   ...authConfig,
   providers: [
     ...authConfig.providers,
+    Credentials({
+      id: "email-password",
+      name: "Email",
+      credentials: {
+        email: { label: "Email", type: "email" },
+        password: { label: "Password", type: "password" },
+      },
+      async authorize(credentials) {
+        const email = (credentials?.email as string | undefined)?.toLowerCase().trim();
+        const password = credentials?.password as string | undefined;
+        if (!email || !password) return null;
+
+        await connectDB();
+        const user = await User.findOne({ email }).select("+password");
+        if (!user || !user.password) return null;
+        if (!user.emailVerified) return null;
+
+        const isValid = verifyPassword(password, user.password);
+        if (!isValid) return null;
+
+        return {
+          id: user._id.toString(),
+          name: user.name,
+          email: user.email,
+          role: user.role,
+        };
+      },
+    }),
     Credentials({
       id: "phone-otp",
       name: "Phone OTP",

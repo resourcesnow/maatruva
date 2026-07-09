@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getProductBySlug, getRelatedProducts } from "@/lib/data/products";
 import { getApprovedReviews } from "@/lib/data/reviews";
@@ -99,15 +100,19 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
 
           <ProductActions product={product} />
 
-          {product.attributes.length > 0 && (
-            <dl className="border-border grid grid-cols-2 gap-2 border-t pt-4 text-sm">
-              {product.attributes.map((attr) => (
-                <div key={attr.name} className="flex gap-2">
-                  <dt className="text-muted-foreground">{attr.name}:</dt>
-                  <dd className="font-medium">{attr.value}</dd>
-                </div>
+          {product.categories.length > 0 && (
+            <div className="border-border flex flex-wrap items-center gap-2 border-t pt-4 text-sm">
+              <span className="text-muted-foreground">Categories:</span>
+              {product.categories.map((c) => (
+                <Link
+                  key={c.id}
+                  href={`/product-category/${c.slug}`}
+                  className="text-brand-secondary hover:underline"
+                >
+                  {c.name}
+                </Link>
               ))}
-            </dl>
+            </div>
           )}
 
           <div className="border-border text-muted-foreground flex flex-col gap-2 border-t pt-4 text-sm">
@@ -125,11 +130,30 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
         <Tabs defaultValue="description">
           <TabsList>
             <TabsTrigger value="description">Description</TabsTrigger>
+            {product.attributes.length > 0 && (
+              <TabsTrigger value="additional-info">Additional Information</TabsTrigger>
+            )}
             <TabsTrigger value="reviews">Reviews ({reviews.length})</TabsTrigger>
           </TabsList>
           <TabsContent value="description" className="max-w-3xl pt-4 text-sm leading-relaxed">
             {product.description}
           </TabsContent>
+          {product.attributes.length > 0 && (
+            <TabsContent value="additional-info" className="max-w-2xl pt-4">
+              <table className="w-full text-sm">
+                <tbody>
+                  {product.attributes.map((attr) => (
+                    <tr key={attr.name} className="border-border border-b last:border-0">
+                      <th className="text-muted-foreground w-1/3 py-2 pr-4 text-left font-medium">
+                        {attr.name}
+                      </th>
+                      <td className="py-2">{attr.value}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </TabsContent>
+          )}
           <TabsContent value="reviews" className="flex max-w-2xl flex-col gap-6 pt-4">
             <ReviewForm productId={product.id} />
             <ReviewList reviews={reviews} />

@@ -82,6 +82,15 @@ export function Footer() {
               <MessageCircle className="size-4" />
             </a>
           </div>
+          <a
+            href={brand.social.whatsapp}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="border-border hover:bg-muted mt-1 inline-flex w-fit items-center gap-2 rounded-full border px-4 py-2 text-sm font-medium"
+          >
+            <MessageCircle className="size-4" />
+            Chat on WhatsApp
+          </a>
         </div>
       </div>
 

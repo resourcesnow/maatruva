@@ -49,6 +49,51 @@ export async function getCategoryBySlug(slug: string) {
   };
 }
 
+export async function getCategoriesWithCounts(): Promise<
+  { id: string; name: string; slug: string; count: number }[]
+> {
+  await connectDB();
+  const { Product } = await import("@/models/Product");
+
+  const docs = await Category.find({ isActive: true }).sort({ order: 1 }).lean();
+  const all = await Category.find({}, { _id: 1, parent: 1 }).lean();
+  const byParent = new Map<string, string[]>();
+  all.forEach((c) => {
+    const key = c.parent ? c.parent.toString() : "root";
+    byParent.set(key, [...(byParent.get(key) ?? []), c._id.toString()]);
+  });
+
+  function descendantIds(id: string) {
+    const ids = [id];
+    const queue = [id];
+    while (queue.length) {
+      const current = queue.shift()!;
+      const children = byParent.get(current) ?? [];
+      children.forEach((childId) => {
+        ids.push(childId);
+        queue.push(childId);
+      });
+    }
+    return ids;
+  }
+
+  const counts = await Promise.all(
+    docs.map((doc) =>
+      Product.countDocuments({
+        status: "published",
+        categories: { $in: descendantIds(doc._id.toString()) },
+      }),
+    ),
+  );
+
+  return docs.map((doc, i) => ({
+    id: doc._id.toString(),
+    name: doc.name,
+    slug: doc.slug,
+    count: counts[i],
+  }));
+}
+
 export async function getCategoryDescendantIds(categoryId: string) {
   await connectDB();
   const all = await Category.find({}, { _id: 1, parent: 1 }).lean();

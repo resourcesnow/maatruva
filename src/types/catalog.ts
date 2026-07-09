@@ -9,6 +9,18 @@ export type CategoryNode = {
   children: CategoryNode[];
 };
 
+export type CategoryWithCount = {
+  id: string;
+  name: string;
+  slug: string;
+  count: number;
+};
+
+export type ColourOption = {
+  value: string;
+  count: number;
+};
+
 export type ProductImage = {
   url: string;
   publicId: string;

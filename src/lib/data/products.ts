@@ -42,6 +42,8 @@ export type ProductSort = "newest" | "price-asc" | "price-desc" | "popular";
 
 export type ProductFilters = {
   categorySlug?: string;
+  categorySlugs?: string[];
+  colours?: string[];
   minPrice?: number;
   maxPrice?: number;
   inStockOnly?: boolean;
@@ -50,6 +52,8 @@ export type ProductFilters = {
   perPage?: number;
   q?: string;
 };
+
+const COLOUR_ATTRIBUTE_NAMES = ["Colour", "Color", "colour", "color"];
 
 const SORT_MAP: Record<ProductSort, Record<string, 1 | -1>> = {
   newest: { createdAt: -1 },
@@ -68,6 +72,25 @@ export async function getProducts(filters: ProductFilters = {}) {
     if (!category) return { products: [], total: 0 };
     const ids = await getCategoryDescendantIds(category.id);
     query.categories = { $in: ids };
+  }
+
+  if (filters.categorySlugs?.length) {
+    const idLists = await Promise.all(
+      filters.categorySlugs.map(async (slug) => {
+        const category = await getCategoryBySlug(slug);
+        return category ? getCategoryDescendantIds(category.id) : [];
+      }),
+    );
+    const ids = [...new Set(idLists.flat())];
+    query.categories = query.categories
+      ? { $in: (query.categories as { $in: string[] }).$in.filter((id) => ids.includes(id)) }
+      : { $in: ids };
+  }
+
+  if (filters.colours?.length) {
+    query.attributes = {
+      $elemMatch: { name: { $in: COLOUR_ATTRIBUTE_NAMES }, value: { $in: filters.colours } },
+    };
   }
 
   if (filters.minPrice != null || filters.maxPrice != null) {
@@ -160,6 +183,18 @@ export async function getProductsByIds(ids: string[]) {
   await connectDB();
   const docs = await Product.find({ _id: { $in: ids } }).lean();
   return docs.map(toProductCard);
+}
+
+export async function getColourOptions(): Promise<{ value: string; count: number }[]> {
+  await connectDB();
+  const results = await Product.aggregate([
+    { $match: { status: "published" } },
+    { $unwind: "$attributes" },
+    { $match: { "attributes.name": { $in: COLOUR_ATTRIBUTE_NAMES } } },
+    { $group: { _id: "$attributes.value", count: { $sum: 1 } } },
+    { $sort: { _id: 1 } },
+  ]);
+  return results.map((r) => ({ value: r._id as string, count: r.count as number }));
 }
 
 export async function searchProducts(q: string, limit = 8) {
