@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import Image from "next/image";
+import { SmartImage as Image } from "@/components/ui/smart-image";
 import { motion } from "framer-motion";
 import { Eye } from "lucide-react";
 import { Price } from "./price";

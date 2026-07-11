@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { verifyRazorpaySignature } from "@/lib/razorpay";
+import { verifyRazorpaySignature, RazorpayConfigError } from "@/lib/razorpay";
 import { markOrderPaid } from "@/lib/order-fulfillment";
 
 const bodySchema = z.object({
@@ -19,13 +19,23 @@ export async function POST(req: Request) {
 
   const { mongoOrderId, razorpayOrderId, razorpayPaymentId, razorpaySignature } = parsed.data;
 
-  const isValid = verifyRazorpaySignature({
-    orderId: razorpayOrderId,
-    paymentId: razorpayPaymentId,
-    signature: razorpaySignature,
-  });
+  let isValid: boolean;
+  try {
+    isValid = verifyRazorpaySignature({
+      orderId: razorpayOrderId,
+      paymentId: razorpayPaymentId,
+      signature: razorpaySignature,
+    });
+  } catch (err) {
+    if (err instanceof RazorpayConfigError) {
+      console.error("[razorpay]", err.message);
+      return NextResponse.json({ error: "Payments are not available right now." }, { status: 503 });
+    }
+    throw err;
+  }
 
   if (!isValid) {
+    console.error("[razorpay] signature mismatch for order", mongoOrderId);
     return NextResponse.json({ error: "Payment verification failed." }, { status: 400 });
   }
 

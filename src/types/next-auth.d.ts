@@ -1,6 +1,6 @@
 import type { DefaultSession } from "next-auth";
 
-export type UserRole = "admin" | "shop_manager" | "customer";
+export type UserRole = "super_admin" | "admin" | "shop_manager" | "customer";
 
 // next-auth's own "next-auth" and "next-auth/jwt" entry points only
 // re-export types from @auth/core, so augmentation must target @auth/core
@@ -10,12 +10,14 @@ declare module "@auth/core/types" {
     user: {
       id: string;
       role: UserRole;
+      sessionVersion: number;
     } & DefaultSession["user"];
   }
 
   interface User {
     id?: string;
     role?: UserRole;
+    sessionVersion?: number;
   }
 }
 
@@ -23,5 +25,6 @@ declare module "@auth/core/jwt" {
   interface JWT {
     id: string;
     role: UserRole;
+    sessionVersion: number;
   }
 }

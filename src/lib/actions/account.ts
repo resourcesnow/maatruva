@@ -6,6 +6,7 @@ import { connectDB } from "@/lib/db";
 import { User } from "@/models/User";
 import { addressSchema } from "@/lib/zod-schemas/address";
 import { profileSchema } from "@/lib/zod-schemas/user";
+import { destroyCloudinaryAsset } from "@/lib/cloudinary";
 
 async function requireUser() {
   const session = await auth();
@@ -26,6 +27,42 @@ export async function updateProfileAction(_prevState: unknown, formData: FormDat
   const user = await requireUser();
   user.name = parsed.data.name;
   await user.save();
+  revalidatePath("/account/profile");
+  return { ok: true, error: null };
+}
+
+export async function updateProfilePictureAction(url: string, publicId: string) {
+  const user = await requireUser();
+
+  const oldPublicId = user.imagePublicId;
+  user.image = url;
+  user.imagePublicId = publicId;
+  await user.save();
+
+  if (oldPublicId && oldPublicId !== publicId) {
+    await destroyCloudinaryAsset(oldPublicId).catch((err) =>
+      console.error("[cloudinary] failed to delete", oldPublicId, err),
+    );
+  }
+
+  revalidatePath("/account/profile");
+  return { ok: true, error: null };
+}
+
+export async function removeProfilePictureAction() {
+  const user = await requireUser();
+
+  const oldPublicId = user.imagePublicId;
+  user.image = undefined;
+  user.imagePublicId = undefined;
+  await user.save();
+
+  if (oldPublicId) {
+    await destroyCloudinaryAsset(oldPublicId).catch((err) =>
+      console.error("[cloudinary] failed to delete", oldPublicId, err),
+    );
+  }
+
   revalidatePath("/account/profile");
   return { ok: true, error: null };
 }

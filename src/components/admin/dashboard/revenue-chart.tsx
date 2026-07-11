@@ -84,7 +84,7 @@ export function RevenueChart({ data }: { data: Point[] }) {
         {yTicks.map((tick, i) => {
           const y = PAD_TOP + (HEIGHT - PAD_TOP - PAD_BOTTOM) * (1 - i / (yTicks.length - 1));
           return (
-            <g key={tick}>
+            <g key={i}>
               <line
                 x1={PAD_LEFT}
                 x2={WIDTH - PAD_RIGHT}

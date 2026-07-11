@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import Image from "next/image";
+import { SmartImage as Image } from "@/components/ui/smart-image";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import type { ProductImage } from "@/types/catalog";

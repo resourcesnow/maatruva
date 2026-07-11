@@ -37,6 +37,7 @@ const homeContentSchema = new Schema(
           name: { type: String },
           role: { type: String },
           photo: { type: String },
+          photoPublicId: { type: String },
           message: { type: String },
         },
       ],

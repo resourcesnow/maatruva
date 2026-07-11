@@ -1,5 +1,5 @@
 import Link from "next/link";
-import Image from "next/image";
+import { SmartImage as Image } from "@/components/ui/smart-image";
 import { Button } from "@/components/ui/button";
 import { Price } from "../price";
 import { Reveal, RevealGroup, RevealItem } from "@/components/motion/reveal";

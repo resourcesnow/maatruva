@@ -12,21 +12,47 @@ import {
   Star,
   FileText,
   UserCog,
+  Inbox,
+  ShieldCheck,
+  ScrollText,
   type LucideIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { UserRole } from "@/types/next-auth";
 
 const ALL_LINKS: { href: string; label: string; icon: LucideIcon; roles: UserRole[] }[] = [
-  { href: "/admin", label: "Dashboard", icon: LayoutDashboard, roles: ["admin", "shop_manager"] },
-  { href: "/admin/products", label: "Products", icon: Package, roles: ["admin", "shop_manager"] },
-  { href: "/admin/categories", label: "Categories", icon: FolderTree, roles: ["admin"] },
-  { href: "/admin/orders", label: "Orders", icon: ShoppingCart, roles: ["admin"] },
-  { href: "/admin/customers", label: "Customers", icon: Users, roles: ["admin"] },
-  { href: "/admin/coupons", label: "Coupons", icon: Ticket, roles: ["admin"] },
-  { href: "/admin/reviews", label: "Reviews", icon: Star, roles: ["admin"] },
-  { href: "/admin/content", label: "Content", icon: FileText, roles: ["admin"] },
-  { href: "/admin/users", label: "Users", icon: UserCog, roles: ["admin"] },
+  {
+    href: "/admin",
+    label: "Dashboard",
+    icon: LayoutDashboard,
+    roles: ["super_admin", "admin", "shop_manager"],
+  },
+  {
+    href: "/admin/products",
+    label: "Products",
+    icon: Package,
+    roles: ["super_admin", "admin", "shop_manager"],
+  },
+  {
+    href: "/admin/categories",
+    label: "Categories",
+    icon: FolderTree,
+    roles: ["super_admin", "admin"],
+  },
+  { href: "/admin/orders", label: "Orders", icon: ShoppingCart, roles: ["super_admin", "admin"] },
+  { href: "/admin/customers", label: "Customers", icon: Users, roles: ["super_admin", "admin"] },
+  { href: "/admin/coupons", label: "Coupons", icon: Ticket, roles: ["super_admin", "admin"] },
+  { href: "/admin/reviews", label: "Reviews", icon: Star, roles: ["super_admin", "admin"] },
+  { href: "/admin/leads", label: "Leads", icon: Inbox, roles: ["super_admin", "admin"] },
+  { href: "/admin/content", label: "Content", icon: FileText, roles: ["super_admin", "admin"] },
+  { href: "/admin/users", label: "Users", icon: UserCog, roles: ["super_admin", "admin"] },
+  { href: "/admin/admins", label: "Manage Admins", icon: ShieldCheck, roles: ["super_admin"] },
+  {
+    href: "/admin/audit-log",
+    label: "Audit Log",
+    icon: ScrollText,
+    roles: ["super_admin", "admin"],
+  },
 ];
 
 export function AdminNav({ role }: { role: UserRole }) {

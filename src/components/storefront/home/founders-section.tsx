@@ -1,4 +1,4 @@
-import Image from "next/image";
+import { SmartImage as Image } from "@/components/ui/smart-image";
 import { SectionHeading } from "./featured-banners";
 import { RevealGroup, RevealItem } from "@/components/motion/reveal";
 

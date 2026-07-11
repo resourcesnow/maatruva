@@ -1,8 +1,17 @@
 import "server-only";
 import { connectDB } from "@/lib/db";
 import { User } from "@/models/User";
+import { resolveSort } from "@/lib/admin-sort";
 
-export async function getAdminUsers(filters: { q?: string; page?: number; perPage?: number }) {
+const SORTABLE_FIELDS = ["createdAt", "name"] as const;
+
+export async function getAdminUsers(filters: {
+  q?: string;
+  page?: number;
+  perPage?: number;
+  sortBy?: string;
+  sortDir?: string;
+}) {
   await connectDB();
   const query: Record<string, unknown> = {};
   if (filters.q) {
@@ -14,10 +23,11 @@ export async function getAdminUsers(filters: { q?: string; page?: number; perPag
 
   const page = filters.page ?? 1;
   const perPage = filters.perPage ?? 20;
+  const { field, dir } = resolveSort(filters.sortBy, filters.sortDir, SORTABLE_FIELDS, "createdAt");
 
   const [docs, total] = await Promise.all([
     User.find(query)
-      .sort({ createdAt: -1 })
+      .sort({ [field]: dir })
       .skip((page - 1) * perPage)
       .limit(perPage)
       .lean(),

@@ -2,14 +2,28 @@
 
 import { revalidatePath } from "next/cache";
 import { auth } from "@/lib/auth";
-import { requireRole } from "@/lib/rbac";
+import { requireRole, roleMatrix } from "@/lib/rbac";
 import { connectDB } from "@/lib/db";
 import { Product } from "@/models/Product";
 import { productSchema } from "@/lib/zod-schemas/product";
+import { logAdminAction } from "@/lib/audit";
+import { destroyCloudinaryAsset } from "@/lib/cloudinary";
+
+async function cleanupProductImages(images: { publicId: string }[]) {
+  await Promise.all(
+    images
+      .filter((img) => img.publicId && !img.publicId.startsWith("placeholder-"))
+      .map((img) =>
+        destroyCloudinaryAsset(img.publicId).catch((err) =>
+          console.error("[cloudinary] failed to delete", img.publicId, err),
+        ),
+      ),
+  );
+}
 
 async function requireProductManager() {
   const session = await auth();
-  requireRole(session, ["admin", "shop_manager"]);
+  requireRole(session, roleMatrix.productsManage);
   return session!;
 }
 
@@ -38,7 +52,7 @@ function parseProductForm(formData: FormData) {
 }
 
 export async function createProductAction(_prevState: unknown, formData: FormData) {
-  await requireProductManager();
+  const session = await requireProductManager();
   const parsed = parseProductForm(formData);
   if (!parsed.success) {
     return { ok: false, error: parsed.error.issues[0].message };
@@ -52,7 +66,21 @@ export async function createProductAction(_prevState: unknown, formData: FormDat
     return { ok: false, error: "A product with this slug or SKU already exists." };
   }
 
-  const product = await Product.create(parsed.data);
+  // The form pre-generates this id client-side so uploaded images already sit in the right
+  // Cloudinary folder before the document exists — no upload-then-relink step.
+  const draftId = formData.get("_id");
+  const validDraftId = typeof draftId === "string" && /^[0-9a-f]{24}$/i.test(draftId);
+
+  const product = await Product.create({
+    ...parsed.data,
+    ...(validDraftId ? { _id: draftId } : {}),
+  });
+  await logAdminAction(session, {
+    action: "create",
+    entityType: "Product",
+    entityId: product._id.toString(),
+    entityLabel: product.title,
+  });
   revalidatePath("/admin/products");
   return { ok: true, error: null, id: product._id.toString() };
 }
@@ -62,7 +90,7 @@ export async function updateProductAction(
   _prevState: unknown,
   formData: FormData,
 ) {
-  await requireProductManager();
+  const session = await requireProductManager();
   const parsed = parseProductForm(formData);
   if (!parsed.success) {
     return { ok: false, error: parsed.error.issues[0].message };
@@ -78,28 +106,62 @@ export async function updateProductAction(
   }
 
   await Product.findByIdAndUpdate(productId, parsed.data);
+  await logAdminAction(session, {
+    action: "update",
+    entityType: "Product",
+    entityId: productId,
+    entityLabel: parsed.data.title,
+  });
   revalidatePath("/admin/products");
   revalidatePath(`/admin/products/${productId}`);
   return { ok: true, error: null };
 }
 
 export async function archiveProductAction(productId: string) {
-  await requireProductManager();
+  const session = await requireProductManager();
   await connectDB();
-  await Product.findByIdAndUpdate(productId, { status: "archived" });
+  const product = await Product.findByIdAndUpdate(productId, { status: "archived" });
+  if (product) {
+    await logAdminAction(session, {
+      action: "status_change",
+      entityType: "Product",
+      entityId: productId,
+      entityLabel: `${product.title} (archived)`,
+    });
+  }
   revalidatePath("/admin/products");
+  return { ok: true, error: null };
 }
 
 export async function publishProductAction(productId: string) {
-  await requireProductManager();
+  const session = await requireProductManager();
   await connectDB();
-  await Product.findByIdAndUpdate(productId, { status: "published" });
+  const product = await Product.findByIdAndUpdate(productId, { status: "published" });
+  if (product) {
+    await logAdminAction(session, {
+      action: "status_change",
+      entityType: "Product",
+      entityId: productId,
+      entityLabel: `${product.title} (published)`,
+    });
+  }
   revalidatePath("/admin/products");
+  return { ok: true, error: null };
 }
 
 export async function deleteProductAction(productId: string) {
-  await requireProductManager();
+  const session = await requireProductManager();
   await connectDB();
-  await Product.findByIdAndDelete(productId);
+  const product = await Product.findByIdAndDelete(productId);
+  if (product) {
+    await cleanupProductImages(product.images);
+    await logAdminAction(session, {
+      action: "delete",
+      entityType: "Product",
+      entityId: productId,
+      entityLabel: product.title,
+    });
+  }
   revalidatePath("/admin/products");
+  return { ok: true, error: null };
 }

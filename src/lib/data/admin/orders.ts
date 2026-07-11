@@ -2,12 +2,17 @@ import "server-only";
 import type { QueryFilter } from "mongoose";
 import { connectDB } from "@/lib/db";
 import { Order, type OrderDoc } from "@/models/Order";
+import { resolveSort } from "@/lib/admin-sort";
+
+const SORTABLE_FIELDS = ["createdAt", "orderNo", "total"] as const;
 
 export async function getAdminOrders(filters: {
   q?: string;
   status?: string;
   page?: number;
   perPage?: number;
+  sortBy?: string;
+  sortDir?: string;
 }) {
   await connectDB();
   const query: QueryFilter<OrderDoc> = {};
@@ -16,10 +21,11 @@ export async function getAdminOrders(filters: {
 
   const page = filters.page ?? 1;
   const perPage = filters.perPage ?? 20;
+  const { field, dir } = resolveSort(filters.sortBy, filters.sortDir, SORTABLE_FIELDS, "createdAt");
 
   const [docs, total] = await Promise.all([
     Order.find(query)
-      .sort({ createdAt: -1 })
+      .sort({ [field]: dir })
       .skip((page - 1) * perPage)
       .limit(perPage)
       .lean(),

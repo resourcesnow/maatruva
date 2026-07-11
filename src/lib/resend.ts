@@ -43,3 +43,81 @@ export async function sendVerificationEmail(email: string, code: string) {
     throw new Error(`Failed to send verification email: ${error.message}`);
   }
 }
+
+export async function sendPasswordResetEmail(email: string, resetUrl: string) {
+  const resend = getClient();
+  const fromEmail = process.env.RESEND_FROM_EMAIL || "onboarding@resend.dev";
+
+  if (!resend) {
+    console.warn(
+      `[email] RESEND_API_KEY not configured. Password reset link for ${email}: ${resetUrl}`,
+    );
+    return;
+  }
+
+  const { error } = await resend.emails.send({
+    from: `${brand.name} Admin <${fromEmail}>`,
+    to: email,
+    subject: `Reset your ${brand.name} admin password`,
+    html: `
+      <div style="font-family: sans-serif; max-width: 420px; margin: 0 auto; padding: 24px;">
+        <h2 style="margin-bottom: 8px;">Reset your password</h2>
+        <p style="color: #555; margin-bottom: 24px;">
+          Click the button below to set a new password for your ${brand.name} admin account.
+          This link expires in 45 minutes.
+        </p>
+        <a href="${resetUrl}" style="display: inline-block; padding: 12px 24px; background: #7a1f2e; color: #fff; text-decoration: none; border-radius: 8px; font-weight: 600;">
+          Reset password
+        </a>
+        <p style="color: #999; font-size: 12px; margin-top: 24px;">
+          If you didn't request this, you can safely ignore this email — your password won't change.
+        </p>
+      </div>
+    `,
+  });
+
+  if (error) {
+    throw new Error(`Failed to send password reset email: ${error.message}`);
+  }
+}
+
+export async function sendAdminInviteEmail(
+  email: string,
+  inviterName: string,
+  setPasswordUrl: string,
+) {
+  const resend = getClient();
+  const fromEmail = process.env.RESEND_FROM_EMAIL || "onboarding@resend.dev";
+
+  if (!resend) {
+    console.warn(
+      `[email] RESEND_API_KEY not configured. Admin invite link for ${email}: ${setPasswordUrl}`,
+    );
+    return;
+  }
+
+  const { error } = await resend.emails.send({
+    from: `${brand.name} Admin <${fromEmail}>`,
+    to: email,
+    subject: `You've been added as a ${brand.name} admin`,
+    html: `
+      <div style="font-family: sans-serif; max-width: 420px; margin: 0 auto; padding: 24px;">
+        <h2 style="margin-bottom: 8px;">You've been invited</h2>
+        <p style="color: #555; margin-bottom: 24px;">
+          ${inviterName} added you as an admin on ${brand.name}. Click the button below to set
+          your password and get started. This link expires in 45 minutes.
+        </p>
+        <a href="${setPasswordUrl}" style="display: inline-block; padding: 12px 24px; background: #7a1f2e; color: #fff; text-decoration: none; border-radius: 8px; font-weight: 600;">
+          Set your password
+        </a>
+        <p style="color: #999; font-size: 12px; margin-top: 24px;">
+          If you weren't expecting this, you can safely ignore this email.
+        </p>
+      </div>
+    `,
+  });
+
+  if (error) {
+    throw new Error(`Failed to send admin invite email: ${error.message}`);
+  }
+}

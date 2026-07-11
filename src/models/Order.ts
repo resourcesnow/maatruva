@@ -51,6 +51,20 @@ const orderSchema = new Schema(
         default: "created",
       },
     },
+    deliveryMethod: {
+      type: String,
+      enum: ["delivery", "pickup"],
+      default: "delivery",
+    },
+    shipping: {
+      provider: { type: String, default: "shiprocket" },
+      shiprocketOrderId: { type: String },
+      shipmentId: { type: String },
+      awbCode: { type: String },
+      courierName: { type: String },
+      trackingUrl: { type: String },
+      status: { type: String },
+    },
     status: {
       type: String,
       enum: ["placed", "confirmed", "packed", "shipped", "delivered", "cancelled"],

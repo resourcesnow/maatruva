@@ -13,7 +13,7 @@ import { brand } from "@/lib/brand";
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: `${brand.name} — Handcrafted Rakhi & Jewellery`,
+  title: `${brand.name} — Handcrafted Rakhi Collection`,
   description: brand.tagline,
 };
 

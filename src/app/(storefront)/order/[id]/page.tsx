@@ -65,17 +65,43 @@ export default async function OrderPage({ params }: { params: Promise<{ id: stri
           </div>
         </div>
 
-        <div className="border-border text-muted-foreground mt-4 border-t pt-4 text-sm">
-          <p className="text-foreground font-medium">Shipping to</p>
-          <p>{order.shippingAddress.name}</p>
-          <p>
-            {order.shippingAddress.line1}
-            {order.shippingAddress.line2 ? `, ${order.shippingAddress.line2}` : ""},{" "}
-            {order.shippingAddress.city}, {order.shippingAddress.state} -{" "}
-            {order.shippingAddress.pincode}
-          </p>
-          <p>{order.shippingAddress.phone}</p>
-        </div>
+        {order.deliveryMethod === "pickup" ? (
+          <div className="border-border text-muted-foreground mt-4 border-t pt-4 text-sm">
+            <p className="text-foreground font-medium">Pickup at Store</p>
+            <p>Collect this order in person once it&apos;s confirmed. No shipping will occur.</p>
+          </div>
+        ) : (
+          <div className="border-border text-muted-foreground mt-4 border-t pt-4 text-sm">
+            <p className="text-foreground font-medium">Shipping to</p>
+            <p>{order.shippingAddress.name}</p>
+            <p>
+              {order.shippingAddress.line1}
+              {order.shippingAddress.line2 ? `, ${order.shippingAddress.line2}` : ""},{" "}
+              {order.shippingAddress.city}, {order.shippingAddress.state} -{" "}
+              {order.shippingAddress.pincode}
+            </p>
+            <p>{order.shippingAddress.phone}</p>
+          </div>
+        )}
+
+        {order.shipping?.awbCode && (
+          <div className="border-border text-muted-foreground mt-4 border-t pt-4 text-sm">
+            <p className="text-foreground font-medium">Tracking</p>
+            {order.shipping.courierName && <p>Courier: {order.shipping.courierName}</p>}
+            <p>AWB: {order.shipping.awbCode}</p>
+            {order.shipping.status && <p>Status: {order.shipping.status}</p>}
+            {order.shipping.trackingUrl && (
+              <a
+                href={order.shipping.trackingUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-brand-secondary underline"
+              >
+                Track shipment
+              </a>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );

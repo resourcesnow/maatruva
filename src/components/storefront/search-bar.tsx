@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import Image from "next/image";
+import { SmartImage as Image } from "@/components/ui/smart-image";
 import { Search, X } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Input } from "@/components/ui/input";
@@ -51,7 +51,7 @@ export function SearchBar({ onClose }: { onClose?: () => void }) {
           ref={inputRef}
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="Search for Rakhis, jewellery..."
+          placeholder="Search for Rakhis..."
           className="pr-9 pl-9"
         />
         {query && (

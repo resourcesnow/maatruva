@@ -24,7 +24,12 @@ export default async function ProfilePage() {
 
   return (
     <div className="flex flex-col gap-8">
-      <ProfileHeader name={profile.name} image={profile.image} isVerified={profile.isVerified} />
+      <ProfileHeader
+        userId={session.user.id}
+        name={profile.name}
+        image={profile.image}
+        isVerified={profile.isVerified}
+      />
 
       <AccountSummaryCards
         orderCount={orders.length}

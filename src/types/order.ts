@@ -31,6 +31,16 @@ export type OrderSummary = {
     provider: string;
     status: "created" | "paid" | "failed" | "refunded";
   };
+  deliveryMethod: "delivery" | "pickup";
+  shipping?: {
+    provider?: string;
+    shiprocketOrderId?: string;
+    shipmentId?: string;
+    awbCode?: string;
+    courierName?: string;
+    trackingUrl?: string;
+    status?: string;
+  };
   status: OrderStatus;
   timeline: { status: string; at: string; note?: string }[];
   createdAt: string;

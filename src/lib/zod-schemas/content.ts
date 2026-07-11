@@ -25,6 +25,7 @@ export const founderSchema = z.object({
   name: z.string().min(1),
   role: z.string().optional().default(""),
   photo: z.string().url().optional().default(""),
+  photoPublicId: z.string().optional().default(""),
   message: z.string().optional().default(""),
 });
 

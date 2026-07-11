@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/select";
 import { ImageUploader, type UploadedImage } from "@/components/admin/image-uploader";
 import { slugify } from "@/lib/format";
+import { cloudinaryFolders } from "@/lib/cloudinary-folders";
 
 const initialState = { ok: false, error: null as string | null };
 
@@ -119,8 +120,9 @@ export function CategoryForm({
         <Label>Category Image</Label>
         <ImageUploader
           images={images}
-          onChange={(imgs) => setImages(imgs.slice(-1))}
-          folder="maatruva/categories"
+          onChange={setImages}
+          folder={cloudinaryFolders.category(slug || "uncategorized")}
+          maxFiles={1}
         />
         <input type="hidden" name="imageUrl" value={images[0]?.url ?? ""} />
         <input type="hidden" name="imagePublicId" value={images[0]?.publicId ?? ""} />

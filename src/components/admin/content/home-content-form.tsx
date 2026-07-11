@@ -8,11 +8,13 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { ImageUploader } from "@/components/admin/image-uploader";
 import { updateHomeContentAction } from "@/lib/actions/admin/content";
+import { cloudinaryFolders } from "@/lib/cloudinary-folders";
 
 const initialState = { ok: false, error: null as string | null };
 
 type HeroSlide = {
   image: string;
+  publicId: string;
   heading: string;
   subheading: string;
   ctaLabel: string;
@@ -21,13 +23,20 @@ type HeroSlide = {
 };
 type Banner = {
   image: string;
+  publicId: string;
   title: string;
   mrp: number;
   salePrice: number;
   ctaLabel: string;
   ctaHref: string;
 };
-type Founder = { name: string; role: string; photo: string; message: string };
+type Founder = {
+  name: string;
+  role: string;
+  photo: string;
+  photoPublicId: string;
+  message: string;
+};
 type WhyItem = { icon: string; title: string; text: string };
 type Faq = { q: string; a: string };
 
@@ -61,6 +70,17 @@ export function HomeContentForm({ initial }: { initial: HomeContentValue }) {
     setValue((v) => ({ ...v, [key]: next }));
   }
 
+  function deleteFromCloudinary(publicId: string | undefined) {
+    if (!publicId || publicId.startsWith("placeholder-")) return;
+    fetch("/api/cloudinary/delete", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ publicId }),
+    }).catch(() => {
+      toast.error("Removed here, but failed to delete image from Cloudinary.");
+    });
+  }
+
   return (
     <form action={formAction} className="flex flex-col gap-6">
       <input type="hidden" name="payload" value={JSON.stringify(value)} />
@@ -69,13 +89,22 @@ export function HomeContentForm({ initial }: { initial: HomeContentValue }) {
         {value.heroSlides.map((slide, i) => (
           <div key={i} className="border-border flex flex-col gap-2 rounded-lg border p-3">
             <ImageUploader
-              images={slide.image ? [{ url: slide.image, publicId: "", alt: "", order: 0 }] : []}
+              images={
+                slide.image
+                  ? [{ url: slide.image, publicId: slide.publicId, alt: "", order: 0 }]
+                  : []
+              }
               onChange={(imgs) => {
                 const next = [...value.heroSlides];
-                next[i] = { ...slide, image: imgs[0]?.url ?? "" };
+                next[i] = {
+                  ...slide,
+                  image: imgs[0]?.url ?? "",
+                  publicId: imgs[0]?.publicId ?? "",
+                };
                 update("heroSlides", next);
               }}
-              folder="maatruva/hero"
+              folder={cloudinaryFolders.homepageBanners}
+              maxFiles={1}
             />
             <Input
               placeholder="Heading"
@@ -120,12 +149,13 @@ export function HomeContentForm({ initial }: { initial: HomeContentValue }) {
               variant="destructive"
               size="sm"
               className="w-fit"
-              onClick={() =>
+              onClick={() => {
+                deleteFromCloudinary(slide.publicId);
                 update(
                   "heroSlides",
                   value.heroSlides.filter((_, idx) => idx !== i),
-                )
-              }
+                );
+              }}
             >
               <Trash2 className="size-3.5" /> Remove
             </Button>
@@ -141,6 +171,7 @@ export function HomeContentForm({ initial }: { initial: HomeContentValue }) {
               ...value.heroSlides,
               {
                 image: "",
+                publicId: "",
                 heading: "",
                 subheading: "",
                 ctaLabel: "Shop Now",
@@ -158,13 +189,22 @@ export function HomeContentForm({ initial }: { initial: HomeContentValue }) {
         {value.featuredBanners.map((banner, i) => (
           <div key={i} className="border-border flex flex-col gap-2 rounded-lg border p-3">
             <ImageUploader
-              images={banner.image ? [{ url: banner.image, publicId: "", alt: "", order: 0 }] : []}
+              images={
+                banner.image
+                  ? [{ url: banner.image, publicId: banner.publicId, alt: "", order: 0 }]
+                  : []
+              }
               onChange={(imgs) => {
                 const next = [...value.featuredBanners];
-                next[i] = { ...banner, image: imgs[0]?.url ?? "" };
+                next[i] = {
+                  ...banner,
+                  image: imgs[0]?.url ?? "",
+                  publicId: imgs[0]?.publicId ?? "",
+                };
                 update("featuredBanners", next);
               }}
-              folder="maatruva/banners"
+              folder={cloudinaryFolders.homepageFeatured}
+              maxFiles={1}
             />
             <Input
               placeholder="Title"
@@ -211,12 +251,13 @@ export function HomeContentForm({ initial }: { initial: HomeContentValue }) {
               variant="destructive"
               size="sm"
               className="w-fit"
-              onClick={() =>
+              onClick={() => {
+                deleteFromCloudinary(banner.publicId);
                 update(
                   "featuredBanners",
                   value.featuredBanners.filter((_, idx) => idx !== i),
-                )
-              }
+                );
+              }}
             >
               <Trash2 className="size-3.5" /> Remove
             </Button>
@@ -232,6 +273,7 @@ export function HomeContentForm({ initial }: { initial: HomeContentValue }) {
               ...value.featuredBanners,
               {
                 image: "",
+                publicId: "",
                 title: "",
                 mrp: 0,
                 salePrice: 0,
@@ -250,14 +292,21 @@ export function HomeContentForm({ initial }: { initial: HomeContentValue }) {
           <div key={i} className="border-border flex flex-col gap-2 rounded-lg border p-3">
             <ImageUploader
               images={
-                founder.photo ? [{ url: founder.photo, publicId: "", alt: "", order: 0 }] : []
+                founder.photo
+                  ? [{ url: founder.photo, publicId: founder.photoPublicId, alt: "", order: 0 }]
+                  : []
               }
               onChange={(imgs) => {
                 const next = [...value.founders];
-                next[i] = { ...founder, photo: imgs[0]?.url ?? "" };
+                next[i] = {
+                  ...founder,
+                  photo: imgs[0]?.url ?? "",
+                  photoPublicId: imgs[0]?.publicId ?? "",
+                };
                 update("founders", next);
               }}
-              folder="maatruva/founders"
+              folder={cloudinaryFolders.homepageFounders}
+              maxFiles={1}
             />
             <div className="flex gap-2">
               <Input
@@ -293,12 +342,13 @@ export function HomeContentForm({ initial }: { initial: HomeContentValue }) {
               variant="destructive"
               size="sm"
               className="w-fit"
-              onClick={() =>
+              onClick={() => {
+                deleteFromCloudinary(founder.photoPublicId);
                 update(
                   "founders",
                   value.founders.filter((_, idx) => idx !== i),
-                )
-              }
+                );
+              }}
             >
               <Trash2 className="size-3.5" /> Remove
             </Button>
@@ -310,7 +360,10 @@ export function HomeContentForm({ initial }: { initial: HomeContentValue }) {
           size="sm"
           className="w-fit"
           onClick={() =>
-            update("founders", [...value.founders, { name: "", role: "", photo: "", message: "" }])
+            update("founders", [
+              ...value.founders,
+              { name: "", role: "", photo: "", photoPublicId: "", message: "" },
+            ])
           }
         >
           <Plus className="size-3.5" /> Add Founder

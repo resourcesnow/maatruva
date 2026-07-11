@@ -11,7 +11,7 @@ export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "Shop All",
-  description: "Browse our full collection of handcrafted Rakhis, jewellery and gift hampers.",
+  description: "Browse our full collection of handcrafted Rakhis.",
 };
 
 const PER_PAGE = 12;

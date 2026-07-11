@@ -2,10 +2,17 @@
 
 import { revalidatePath } from "next/cache";
 import { auth } from "@/lib/auth";
-import { requireRole } from "@/lib/rbac";
+import { requireRole, roleMatrix } from "@/lib/rbac";
 import { connectDB } from "@/lib/db";
 import { Review } from "@/models/Review";
 import { Product } from "@/models/Product";
+import { logAdminAction } from "@/lib/audit";
+
+async function requireAdmin() {
+  const session = await auth();
+  requireRole(session, roleMatrix.reviewsModerate);
+  return session!;
+}
 
 async function recalculateProductRating(productId: string) {
   const stats = await Review.aggregate([
@@ -17,31 +24,55 @@ async function recalculateProductRating(productId: string) {
 }
 
 export async function approveReviewAction(reviewId: string) {
-  const session = await auth();
-  requireRole(session, ["admin"]);
+  const session = await requireAdmin();
 
   await connectDB();
   const review = await Review.findByIdAndUpdate(reviewId, { isApproved: true });
-  if (review) await recalculateProductRating(review.product.toString());
+  if (review) {
+    await recalculateProductRating(review.product.toString());
+    await logAdminAction(session, {
+      action: "status_change",
+      entityType: "Review",
+      entityId: reviewId,
+      entityLabel: `Review approved (rating ${review.rating})`,
+    });
+  }
   revalidatePath("/admin/reviews");
+  return { ok: true, error: null };
 }
 
 export async function rejectReviewAction(reviewId: string) {
-  const session = await auth();
-  requireRole(session, ["admin"]);
+  const session = await requireAdmin();
 
   await connectDB();
   const review = await Review.findByIdAndUpdate(reviewId, { isApproved: false });
-  if (review) await recalculateProductRating(review.product.toString());
+  if (review) {
+    await recalculateProductRating(review.product.toString());
+    await logAdminAction(session, {
+      action: "status_change",
+      entityType: "Review",
+      entityId: reviewId,
+      entityLabel: `Review rejected (rating ${review.rating})`,
+    });
+  }
   revalidatePath("/admin/reviews");
+  return { ok: true, error: null };
 }
 
 export async function deleteReviewAction(reviewId: string) {
-  const session = await auth();
-  requireRole(session, ["admin"]);
+  const session = await requireAdmin();
 
   await connectDB();
   const review = await Review.findByIdAndDelete(reviewId);
-  if (review) await recalculateProductRating(review.product.toString());
+  if (review) {
+    await recalculateProductRating(review.product.toString());
+    await logAdminAction(session, {
+      action: "delete",
+      entityType: "Review",
+      entityId: reviewId,
+      entityLabel: `Review by ${review.user} (rating ${review.rating})`,
+    });
+  }
   revalidatePath("/admin/reviews");
+  return { ok: true, error: null };
 }

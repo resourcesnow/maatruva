@@ -1,24 +1,21 @@
 import { BadgeCheck } from "lucide-react";
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import { ProfilePictureUploader } from "./profile-picture-uploader";
 
 export function ProfileHeader({
+  userId,
   name,
   image,
   isVerified,
 }: {
+  userId: string;
   name: string;
   image?: string | null;
   isVerified: boolean;
 }) {
-  const initial = name?.trim()?.[0]?.toUpperCase() ?? "?";
-
   return (
     <div className="flex items-center gap-4">
-      <Avatar size="lg" className="size-16">
-        {image && <AvatarImage src={image} alt={name} />}
-        <AvatarFallback className="text-xl font-semibold">{initial}</AvatarFallback>
-      </Avatar>
+      <ProfilePictureUploader userId={userId} name={name} image={image} />
       <div className="flex flex-col gap-1">
         <span className="text-lg font-semibold">{name}</span>
         {isVerified ? (

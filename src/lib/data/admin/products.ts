@@ -2,6 +2,9 @@ import "server-only";
 import type { QueryFilter } from "mongoose";
 import { connectDB } from "@/lib/db";
 import { Product, type ProductDoc } from "@/models/Product";
+import { resolveSort } from "@/lib/admin-sort";
+
+const SORTABLE_FIELDS = ["createdAt", "title", "price", "stock"] as const;
 
 export async function getAdminProducts(filters: {
   q?: string;
@@ -9,6 +12,8 @@ export async function getAdminProducts(filters: {
   category?: string;
   page?: number;
   perPage?: number;
+  sortBy?: string;
+  sortDir?: string;
 }) {
   await connectDB();
   const query: QueryFilter<ProductDoc> = {};
@@ -18,10 +23,11 @@ export async function getAdminProducts(filters: {
 
   const page = filters.page ?? 1;
   const perPage = filters.perPage ?? 20;
+  const { field, dir } = resolveSort(filters.sortBy, filters.sortDir, SORTABLE_FIELDS, "createdAt");
 
   const [docs, total] = await Promise.all([
     Product.find(query)
-      .sort({ createdAt: -1 })
+      .sort({ [field]: dir })
       .skip((page - 1) * perPage)
       .limit(perPage)
       .lean(),

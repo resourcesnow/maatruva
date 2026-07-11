@@ -12,6 +12,8 @@
     "format:check": "prettier --check .",
     "seed": "tsx scripts/seed.ts",
     "import:products": "tsx scripts/import-products.ts",
+    "import:master-file": "tsx scripts/import-master-file.ts",
+    "promote:super-admin": "tsx scripts/promote-super-admin.ts",
     "prepare": "husky"
   },
   "lint-staged": {
@@ -64,6 +66,7 @@
     "prettier-plugin-tailwindcss": "^0.8.0",
     "tailwindcss": "^4",
     "tsx": "^4.23.0",
-    "typescript": "^5"
+    "typescript": "^5",
+    "xlsx": "^0.18.5"
   }
 }

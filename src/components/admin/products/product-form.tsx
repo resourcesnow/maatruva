@@ -17,6 +17,8 @@ import {
 } from "@/components/ui/select";
 import { ImageUploader, type UploadedImage } from "@/components/admin/image-uploader";
 import { slugify } from "@/lib/format";
+import { cloudinaryFolders } from "@/lib/cloudinary-folders";
+import { generateObjectId } from "@/lib/generate-object-id";
 import type { CategoryNode } from "@/types/catalog";
 
 const initialState = {
@@ -57,6 +59,7 @@ export function ProductForm({
   categories,
   initialValues,
   action,
+  productId,
 }: {
   categories: CategoryNode[];
   initialValues?: Partial<ProductFormValues>;
@@ -64,10 +67,16 @@ export function ProductForm({
     prevState: unknown,
     formData: FormData,
   ) => Promise<{ ok: boolean; error: string | null; id?: string }>;
+  /** Existing product's real _id when editing. Omit when creating — a draft id is generated. */
+  productId?: string;
 }) {
   const [state, formAction, pending] = useActionState(action, initialState);
   const router = useRouter();
   const flatCategories = flattenCategories(categories);
+
+  // For a new product, generate its eventual Mongo _id up front so uploaded images can go
+  // straight into that product's Cloudinary folder — no upload-then-relink step needed.
+  const [draftId] = useState(() => productId ?? generateObjectId());
 
   const [title, setTitle] = useState(initialValues?.title ?? "");
   const [slug, setSlug] = useState(initialValues?.slug ?? "");
@@ -227,8 +236,13 @@ export function ProductForm({
 
       <div className="flex flex-col gap-2">
         <Label>Images</Label>
-        <ImageUploader images={images} onChange={setImages} />
+        <ImageUploader
+          images={images}
+          onChange={setImages}
+          folder={cloudinaryFolders.product(draftId)}
+        />
         <input type="hidden" name="images" value={JSON.stringify(images)} />
+        {!productId && <input type="hidden" name="_id" value={draftId} />}
       </div>
 
       <div className="flex flex-col gap-1.5">

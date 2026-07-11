@@ -135,7 +135,10 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
             )}
             <TabsTrigger value="reviews">Reviews ({reviews.length})</TabsTrigger>
           </TabsList>
-          <TabsContent value="description" className="max-w-3xl pt-4 text-sm leading-relaxed">
+          <TabsContent
+            value="description"
+            className="max-w-3xl pt-4 text-sm leading-relaxed whitespace-pre-line"
+          >
             {product.description}
           </TabsContent>
           {product.attributes.length > 0 && (

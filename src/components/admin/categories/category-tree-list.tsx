@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
+import { ConfirmActionDialog } from "@/components/admin/confirm-action-dialog";
 import { deleteCategoryAction, toggleCategoryActiveAction } from "@/lib/actions/admin/categories";
 import type { CategoryNode } from "@/types/catalog";
 
@@ -46,9 +47,14 @@ function Row({ category, depth }: { category: CategoryNode; depth: number }) {
           >
             Edit
           </Button>
-          <Button variant="destructive" size="sm" onClick={handleDelete} disabled={pending}>
-            Delete
-          </Button>
+          <ConfirmActionDialog
+            triggerRender={<Button variant="destructive" size="sm" disabled={pending} />}
+            triggerLabel="Delete"
+            title={`Delete "${category.name}"?`}
+            description="This action cannot be undone. Categories with subcategories or assigned products can't be deleted."
+            confirmLabel="Delete"
+            onConfirm={handleDelete}
+          />
         </div>
       </div>
       {category.children.map((child) => (

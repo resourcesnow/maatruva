@@ -4,10 +4,11 @@ import { NewsletterForm } from "./newsletter-form";
 import { brand } from "@/lib/brand";
 
 const shopLinks = [
-  { label: "Rakhi Collection", href: "/product-category/rakhi" },
-  { label: "Jewellery", href: "/product-category/jewellery" },
-  { label: "Gift Hampers", href: "/product-category/gift-hampers" },
-  { label: "Combo", href: "/product-category/combo" },
+  { label: "Bhai Rakhi", href: "/product-category/rakhi/bhai-rakhi" },
+  { label: "Bhabhi Rakhi", href: "/product-category/rakhi/bhabhi-rakhi" },
+  { label: "Couple Rakhi", href: "/product-category/rakhi/couple-rakhi" },
+  { label: "Silver Rakhi", href: "/product-category/rakhi/silver-rakhi" },
+  { label: "Kids Rakhi", href: "/product-category/rakhi/kids-rakhi" },
   { label: "All Products", href: "/shop" },
 ];
 

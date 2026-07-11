@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import Image from "next/image";
+import { SmartImage as Image } from "@/components/ui/smart-image";
 import { ChevronRight } from "lucide-react";
 import { getProducts, getColourOptions, type ProductSort } from "@/lib/data/products";
 import { getCategoryBySlug, getCategoriesWithCounts } from "@/lib/data/categories";

@@ -2,14 +2,16 @@
 
 import { revalidatePath } from "next/cache";
 import { auth } from "@/lib/auth";
-import { requireRole } from "@/lib/rbac";
+import { requireRole, roleMatrix } from "@/lib/rbac";
 import { connectDB } from "@/lib/db";
 import { Coupon } from "@/models/Coupon";
 import { couponSchema } from "@/lib/zod-schemas/coupon";
+import { logAdminAction } from "@/lib/audit";
 
 async function requireAdmin() {
   const session = await auth();
-  requireRole(session, ["admin"]);
+  requireRole(session, roleMatrix.couponsManage);
+  return session!;
 }
 
 function parseCouponForm(formData: FormData) {
@@ -27,7 +29,7 @@ function parseCouponForm(formData: FormData) {
 }
 
 export async function createCouponAction(_prevState: unknown, formData: FormData) {
-  await requireAdmin();
+  const session = await requireAdmin();
   const parsed = parseCouponForm(formData);
   if (!parsed.success) return { ok: false, error: parsed.error.issues[0].message };
 
@@ -35,7 +37,13 @@ export async function createCouponAction(_prevState: unknown, formData: FormData
   const existing = await Coupon.findOne({ code: parsed.data.code });
   if (existing) return { ok: false, error: "A coupon with this code already exists." };
 
-  await Coupon.create(parsed.data);
+  const coupon = await Coupon.create(parsed.data);
+  await logAdminAction(session, {
+    action: "create",
+    entityType: "Coupon",
+    entityId: coupon._id.toString(),
+    entityLabel: coupon.code,
+  });
   revalidatePath("/admin/coupons");
   return { ok: true, error: null };
 }
@@ -45,19 +53,34 @@ export async function updateCouponAction(
   _prevState: unknown,
   formData: FormData,
 ) {
-  await requireAdmin();
+  const session = await requireAdmin();
   const parsed = parseCouponForm(formData);
   if (!parsed.success) return { ok: false, error: parsed.error.issues[0].message };
 
   await connectDB();
   await Coupon.findByIdAndUpdate(couponId, parsed.data);
+  await logAdminAction(session, {
+    action: "update",
+    entityType: "Coupon",
+    entityId: couponId,
+    entityLabel: parsed.data.code,
+  });
   revalidatePath("/admin/coupons");
   return { ok: true, error: null };
 }
 
 export async function deleteCouponAction(couponId: string) {
-  await requireAdmin();
+  const session = await requireAdmin();
   await connectDB();
-  await Coupon.findByIdAndDelete(couponId);
+  const coupon = await Coupon.findByIdAndDelete(couponId);
+  if (coupon) {
+    await logAdminAction(session, {
+      action: "delete",
+      entityType: "Coupon",
+      entityId: couponId,
+      entityLabel: coupon.code,
+    });
+  }
   revalidatePath("/admin/coupons");
+  return { ok: true, error: null };
 }

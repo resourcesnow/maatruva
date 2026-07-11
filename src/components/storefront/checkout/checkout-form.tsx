@@ -6,10 +6,22 @@ import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { useCartStore, cartSubtotal } from "@/store/cart";
 import { useRazorpayScript } from "@/lib/use-razorpay-script";
 import { formatINR } from "@/lib/format";
 import { brand } from "@/lib/brand";
+
+type DeliveryMethod = "delivery" | "pickup";
 
 type SavedAddress = {
   id: string;
@@ -44,6 +56,8 @@ export function CheckoutForm({
   const [selectedId, setSelectedId] = useState<string | null>(defaultAddress?.id ?? null);
   const [useNewAddress, setUseNewAddress] = useState(addresses.length === 0);
   const [submitting, setSubmitting] = useState(false);
+  const [deliveryMethod, setDeliveryMethod] = useState<DeliveryMethod>("delivery");
+  const [pickupConfirmOpen, setPickupConfirmOpen] = useState(false);
 
   const [fullName, setFullName] = useState(userName ?? "");
   const [guestEmail, setGuestEmail] = useState(userEmail ?? "");
@@ -108,6 +122,7 @@ export function CheckoutForm({
           shippingAddress,
           guestEmail: isLoggedIn ? undefined : guestEmail,
           couponCode: couponCode ?? undefined,
+          deliveryMethod,
         }),
       });
       const data = await res.json();
@@ -256,7 +271,77 @@ export function CheckoutForm({
             </div>
           )}
         </div>
+
+        <div>
+          <h2 className="font-heading mb-3 text-lg font-semibold">Delivery Method</h2>
+          <div className="flex flex-col gap-2">
+            <label className="border-border has-checked:border-primary flex cursor-pointer items-start gap-2 rounded-lg border p-3 text-sm">
+              <input
+                type="radio"
+                name="deliveryMethod"
+                checked={deliveryMethod === "delivery"}
+                onChange={() => setDeliveryMethod("delivery")}
+                className="mt-1"
+              />
+              <span>
+                <strong>Home Delivery</strong>
+                <span className="text-muted-foreground block">
+                  Shipped to your address via courier.
+                </span>
+              </span>
+            </label>
+            <label className="border-border has-checked:border-primary flex cursor-pointer items-start gap-2 rounded-lg border p-3 text-sm">
+              <input
+                type="radio"
+                name="deliveryMethod"
+                checked={deliveryMethod === "pickup"}
+                onChange={() => setPickupConfirmOpen(true)}
+                className="mt-1"
+              />
+              <span>
+                <strong>Pickup at Store</strong>
+                <span className="text-muted-foreground block">
+                  Collect your order in person from our store.
+                </span>
+              </span>
+            </label>
+          </div>
+        </div>
       </div>
+
+      <AlertDialog
+        open={pickupConfirmOpen}
+        onOpenChange={(open) => {
+          if (!open) setPickupConfirmOpen(false);
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirm store pickup?</AlertDialogTitle>
+            <AlertDialogDescription>
+              You&apos;ll need to visit our store in person to collect this order after it&apos;s
+              confirmed — it won&apos;t be shipped.
+              <span className="text-foreground mt-3 block font-medium">{brand.name} Store</span>
+              <span className="block">{brand.storeAddress.line1}</span>
+              <span className="block">
+                {brand.storeAddress.city}, {brand.storeAddress.state} - {brand.storeAddress.pincode}
+              </span>
+              <span className="block">{brand.storeAddress.phone}</span>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                setDeliveryMethod("pickup");
+                setPickupConfirmOpen(false);
+              }}
+            >
+              Yes, I&apos;ll pick it up
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <div className="border-border flex h-fit flex-col gap-4 rounded-2xl border p-5">
         <h2 className="font-heading text-lg font-semibold">Order Summary</h2>

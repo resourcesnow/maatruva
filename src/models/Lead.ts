@@ -6,6 +6,7 @@ const leadSchema = new Schema(
     email: { type: String, default: null },
     phone: { type: String, default: null },
     message: { type: String, default: "" },
+    isActioned: { type: Boolean, default: false },
   },
   { timestamps: true },
 );

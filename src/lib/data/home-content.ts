@@ -9,6 +9,7 @@ export async function getHomeContent() {
   return JSON.parse(JSON.stringify(doc)) as {
     heroSlides: {
       image?: string;
+      publicId?: string;
       video?: string;
       heading: string;
       subheading?: string;
@@ -18,13 +19,20 @@ export async function getHomeContent() {
     }[];
     featuredBanners: {
       image: string;
+      publicId?: string;
       title: string;
       mrp?: number;
       salePrice?: number;
       ctaLabel?: string;
       ctaHref: string;
     }[];
-    founders: { name: string; role?: string; photo?: string; message?: string }[];
+    founders: {
+      name: string;
+      role?: string;
+      photo?: string;
+      photoPublicId?: string;
+      message?: string;
+    }[];
     whyChooseUs: { icon: string; title: string; text?: string }[];
     faq: { q: string; a: string }[];
     meta?: { title?: string; description?: string };
