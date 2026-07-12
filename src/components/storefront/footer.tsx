@@ -1,7 +1,9 @@
 import Link from "next/link";
-import { Camera, MessageCircle, MapPin } from "lucide-react";
-import { NewsletterForm } from "./newsletter-form";
+import { SiInstagram, SiWhatsapp } from "react-icons/si";
 import { brand } from "@/lib/brand";
+
+const MAP_EMBED_SRC =
+  "https://www.google.com/maps?q=Ashapuri%20Rakhi%20by%20Mamtaben%2C%20Adajan%2C%20opposite%20B.S.N.L%20office%2C%20behind%20Navyug%20College%20Road%2C%20Tirupati%20Society%2C%20Nahar%20Colony%2C%20Narotam%20Nagar%2C%20Surat%2C%20Gujarat%20395009&output=embed";
 
 const shopLinks = [
   { label: "Bhai Rakhi", href: "/product-category/rakhi/bhai-rakhi" },
@@ -21,25 +23,31 @@ const browseLinks = [
 
 export function Footer() {
   return (
-    <footer className="border-border bg-secondary/60 mt-20 border-t">
+    <footer className="bg-cream border-maroon-dark/20 mt-20 border-t">
       <div className="mx-auto grid max-w-7xl grid-cols-1 gap-10 px-4 py-14 sm:grid-cols-2 md:px-8 lg:grid-cols-4">
         <div className="flex flex-col gap-3">
-          <span className="font-heading text-xl font-semibold">{brand.name}</span>
-          <p className="text-muted-foreground max-w-xs text-sm">{brand.tagline}</p>
-          <div className="text-muted-foreground mt-2 flex items-center gap-2 text-sm">
-            <MapPin className="size-4 shrink-0" />
-            <span>Mumbai, Maharashtra, India</span>
+          <span className="font-heading text-maroon-dark text-xl font-semibold">{brand.name}</span>
+          <p className="text-maroon-dark/80 max-w-xs text-sm">{brand.tagline}</p>
+          <div className="border-maroon-dark/20 mt-2 aspect-video w-full max-w-xs overflow-hidden rounded-lg border">
+            <iframe
+              src={MAP_EMBED_SRC}
+              title="Store location"
+              loading="lazy"
+              referrerPolicy="no-referrer-when-downgrade"
+              className="h-full w-full border-0"
+            />
           </div>
-          <NewsletterForm />
         </div>
 
         <div className="flex flex-col gap-2">
-          <h3 className="font-heading text-sm font-semibold tracking-wide uppercase">Shop</h3>
+          <h3 className="font-heading text-maroon-dark text-sm font-semibold tracking-wide uppercase">
+            Shop
+          </h3>
           {shopLinks.map((link) => (
             <Link
               key={link.href}
               href={link.href}
-              className="text-muted-foreground hover:text-foreground text-sm"
+              className="text-maroon-dark/80 hover:text-maroon-dark text-sm"
             >
               {link.label}
             </Link>
@@ -47,14 +55,14 @@ export function Footer() {
         </div>
 
         <div className="flex flex-col gap-2">
-          <h3 className="font-heading text-sm font-semibold tracking-wide uppercase">
+          <h3 className="font-heading text-maroon-dark text-sm font-semibold tracking-wide uppercase">
             Browse More
           </h3>
           {browseLinks.map((link) => (
             <Link
               key={link.href}
               href={link.href}
-              className="text-muted-foreground hover:text-foreground text-sm"
+              className="text-maroon-dark/80 hover:text-maroon-dark text-sm"
             >
               {link.label}
             </Link>
@@ -62,40 +70,33 @@ export function Footer() {
         </div>
 
         <div className="flex flex-col gap-3">
-          <h3 className="font-heading text-sm font-semibold tracking-wide uppercase">Connect</h3>
+          <h3 className="font-heading text-maroon-dark text-sm font-semibold tracking-wide uppercase">
+            Connect
+          </h3>
           <div className="flex items-center gap-3">
             <a
               href={brand.social.instagram}
               target="_blank"
               rel="noopener noreferrer"
               aria-label="Instagram"
-              className="border-border hover:bg-muted flex size-9 items-center justify-center rounded-full border"
+              className="border-maroon-dark/20 hover:bg-maroon-dark/5 flex size-9 items-center justify-center rounded-full border bg-white transition-colors"
             >
-              <Camera className="size-4" />
+              <SiInstagram className="size-4.5" color="#E4405F" />
             </a>
             <a
               href={brand.social.whatsapp}
               target="_blank"
               rel="noopener noreferrer"
               aria-label="WhatsApp"
-              className="border-border hover:bg-muted flex size-9 items-center justify-center rounded-full border"
+              className="border-maroon-dark/20 hover:bg-maroon-dark/5 flex size-9 items-center justify-center rounded-full border bg-white transition-colors"
             >
-              <MessageCircle className="size-4" />
+              <SiWhatsapp className="size-4.5" color="#25D366" />
             </a>
           </div>
-          <a
-            href={brand.social.whatsapp}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="border-border hover:bg-muted mt-1 inline-flex w-fit items-center gap-2 rounded-full border px-4 py-2 text-sm font-medium"
-          >
-            <MessageCircle className="size-4" />
-            Chat on WhatsApp
-          </a>
         </div>
       </div>
 
-      <div className="border-border text-muted-foreground border-t py-5 text-center text-xs">
+      <div className="border-maroon-dark/20 text-maroon-dark/70 border-t py-5 text-center text-xs">
         © {new Date().getFullYear()} {brand.name}. All rights reserved.
       </div>
     </footer>

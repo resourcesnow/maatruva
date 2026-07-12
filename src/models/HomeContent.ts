@@ -62,6 +62,20 @@ const homeContentSchema = new Schema(
       ],
       default: [],
     },
+    brandStatement: {
+      image: { type: String },
+      publicId: { type: String },
+      words: { type: [String], default: [] },
+    },
+    bestsellersSection: {
+      enabled: { type: Boolean, default: true },
+      title: { type: String, default: "Trending Bestsellers" },
+      subtitle: {
+        type: String,
+        default: "Our most loved rakhis, chosen by thousands of sisters.",
+      },
+      limit: { type: Number, default: 12 },
+    },
     meta: {
       title: { type: String },
       description: { type: String },

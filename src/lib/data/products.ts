@@ -2,6 +2,7 @@ import "server-only";
 import type { QueryFilter, Types } from "mongoose";
 import { connectDB } from "@/lib/db";
 import { Product, type ProductDoc } from "@/models/Product";
+import { Order } from "@/models/Order";
 import { getCategoryBySlug, getCategoryDescendantIds } from "./categories";
 import type { ProductCard, ProductDetail } from "@/types/catalog";
 
@@ -157,13 +158,30 @@ export async function getFeaturedProducts(limit = 8) {
   return docs.map(toProductCard);
 }
 
+// Mirrors WooCommerce's built-in "best selling products" logic: rank by total quantity sold
+// across a product's entire order history (paid, non-cancelled orders), all-time cumulative —
+// not a manually curated flag, so this stays accurate as orders come in.
 export async function getBestsellers(limit = 8) {
   await connectDB();
-  const docs = await Product.find({ status: "published", isBestseller: true })
-    .sort({ ratingCount: -1 })
-    .limit(limit)
-    .lean();
-  return docs.map(toProductCard);
+
+  const ranked = await Order.aggregate([
+    { $match: { "payment.status": "paid", status: { $ne: "cancelled" } } },
+    { $unwind: "$items" },
+    { $group: { _id: "$items.product", qty: { $sum: "$items.qty" } } },
+    { $sort: { qty: -1 } },
+    { $limit: limit * 3 },
+  ]);
+
+  if (ranked.length === 0) return [];
+
+  const ids = ranked.map((r) => r._id);
+  const rank = new Map(ids.map((id, i) => [id.toString(), i]));
+
+  const docs = await Product.find({ _id: { $in: ids }, status: "published" }).lean();
+  return docs
+    .map(toProductCard)
+    .sort((a, b) => (rank.get(a.id) ?? 0) - (rank.get(b.id) ?? 0))
+    .slice(0, limit);
 }
 
 export async function getRelatedProducts(productId: string, categoryIds: string[], limit = 8) {

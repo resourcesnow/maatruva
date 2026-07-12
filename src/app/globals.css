@@ -50,6 +50,20 @@
   --radius-2xl: calc(var(--radius) * 1.8);
   --radius-3xl: calc(var(--radius) * 2.2);
   --radius-4xl: calc(var(--radius) * 2.6);
+
+  /* Maatruva brand palette (warm cream / maroon / gold) */
+  --color-cream: #f7f0e6;
+  --color-cream-light: #fbf6ec;
+  --color-cream-dark: #e4d3b8;
+  --color-maroon: #7a1f2b;
+  --color-maroon-dark: #5c1620;
+  --color-gold: #c6a15b;
+  /* Storefront page background. Kept separate from --color-cream so the Brand
+     Statement / "Our Message" section can stay on the original cream tone. */
+  --color-porcelain: #fbf6ef;
+  --font-serif: var(--font-display);
+  --shadow-warm: 0 4px 16px rgba(122, 31, 43, 0.06);
+  --shadow-warm-lg: 0 12px 32px rgba(198, 161, 91, 0.35);
 }
 
 :root {

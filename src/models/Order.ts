@@ -85,6 +85,7 @@ const orderSchema = new Schema(
 );
 
 orderSchema.index({ user: 1, createdAt: -1 });
+orderSchema.index({ "payment.status": 1, status: 1 });
 
 export type OrderDoc = InferSchemaType<typeof orderSchema>;
 

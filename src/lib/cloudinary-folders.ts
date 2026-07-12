@@ -6,6 +6,7 @@ export const cloudinaryFolders = {
   homepageBanners: "maatruva/homepage/banners",
   homepageFeatured: "maatruva/homepage/featured",
   homepageFounders: "maatruva/homepage/founders",
+  homepageBrandStatement: "maatruva/homepage/brand-statement",
   profilePicture: (userId: string) => `maatruva/users/profile-pictures/${userId}`,
   misc: "maatruva/misc",
 };
@@ -14,6 +15,7 @@ const HOMEPAGE_FOLDERS = [
   cloudinaryFolders.homepageBanners,
   cloudinaryFolders.homepageFeatured,
   cloudinaryFolders.homepageFounders,
+  cloudinaryFolders.homepageBrandStatement,
 ];
 
 // Server-side guard used by the signing route: is this user allowed to sign an upload targeting

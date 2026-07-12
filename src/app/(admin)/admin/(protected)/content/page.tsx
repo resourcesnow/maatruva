@@ -16,7 +16,7 @@ export default async function AdminContentPage() {
           heroSlides: (content?.heroSlides ?? []).map((s) => ({
             image: s.image ?? "",
             publicId: s.publicId ?? "",
-            heading: s.heading,
+            heading: s.heading ?? "",
             subheading: s.subheading ?? "",
             ctaLabel: s.ctaLabel ?? "",
             ctaHref: s.ctaHref ?? "",
@@ -44,6 +44,21 @@ export default async function AdminContentPage() {
             text: w.text ?? "",
           })),
           faq: content?.faq ?? [],
+          brandStatement: {
+            image: content?.brandStatement?.image ?? "",
+            publicId: content?.brandStatement?.publicId ?? "",
+            words: [
+              content?.brandStatement?.words?.[0] ?? "",
+              content?.brandStatement?.words?.[1] ?? "",
+              content?.brandStatement?.words?.[2] ?? "",
+            ],
+          },
+          bestsellersSection: {
+            enabled: content?.bestsellersSection?.enabled ?? true,
+            title: content?.bestsellersSection?.title ?? "Trending Bestsellers",
+            subtitle: content?.bestsellersSection?.subtitle ?? "",
+            limit: content?.bestsellersSection?.limit ?? 12,
+          },
         }}
       />
     </div>

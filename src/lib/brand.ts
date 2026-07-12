@@ -7,12 +7,12 @@ export const brand = {
     instagram: "https://instagram.com/",
     whatsapp: "https://wa.me/918140555585",
   },
-  // TODO: placeholder — replace with the real store address before launch.
   storeAddress: {
-    line1: "Maatruva Store address line — TODO",
-    city: "Mumbai",
-    state: "Maharashtra",
-    pincode: "000000",
+    line1:
+      "Ashapuri Rakhi by Mamtaben, opposite B.S.N.L office, behind Navyug College Road, Tirupati Society, Nahar Colony, Narotam Nagar",
+    city: "Surat",
+    state: "Gujarat",
+    pincode: "395009",
     phone: "+918140555585",
   },
 } as const;

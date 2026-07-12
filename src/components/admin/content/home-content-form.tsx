@@ -1,11 +1,13 @@
 "use client";
 
 import { useActionState, useEffect, useState } from "react";
+import Link from "next/link";
 import { toast } from "sonner";
 import { Plus, Trash2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
+import { Switch } from "@/components/ui/switch";
 import { ImageUploader } from "@/components/admin/image-uploader";
 import { updateHomeContentAction } from "@/lib/actions/admin/content";
 import { cloudinaryFolders } from "@/lib/cloudinary-folders";
@@ -39,6 +41,8 @@ type Founder = {
 };
 type WhyItem = { icon: string; title: string; text: string };
 type Faq = { q: string; a: string };
+type BrandStatement = { image: string; publicId: string; words: string[] };
+type BestsellersSection = { enabled: boolean; title: string; subtitle: string; limit: number };
 
 type HomeContentValue = {
   heroSlides: HeroSlide[];
@@ -46,6 +50,8 @@ type HomeContentValue = {
   founders: Founder[];
   whyChooseUs: WhyItem[];
   faq: Faq[];
+  brandStatement: BrandStatement;
+  bestsellersSection: BestsellersSection;
 };
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
@@ -84,6 +90,15 @@ export function HomeContentForm({ initial }: { initial: HomeContentValue }) {
   return (
     <form action={formAction} className="flex flex-col gap-6">
       <input type="hidden" name="payload" value={JSON.stringify(value)} />
+
+      <p className="text-muted-foreground -mb-2 text-sm">
+        The &ldquo;Explore Our Collections&rdquo; homepage section is no longer edited here — it now
+        shows your top-level product categories automatically. Edit category names/images at{" "}
+        <Link href="/admin/categories" className="underline">
+          /admin/categories
+        </Link>
+        .
+      </p>
 
       <Section title="Hero Slides">
         {value.heroSlides.map((slide, i) => (
@@ -287,6 +302,49 @@ export function HomeContentForm({ initial }: { initial: HomeContentValue }) {
         </Button>
       </Section>
 
+      <Section title="Bestsellers Rail">
+        <p className="text-muted-foreground text-sm">
+          Products are picked automatically by total quantity sold (all-time) &mdash; there&rsquo;s
+          nothing to curate here besides the section copy, count, and visibility below.
+        </p>
+        <label className="flex items-center gap-2 text-sm">
+          <Switch
+            checked={value.bestsellersSection.enabled}
+            onCheckedChange={(checked) =>
+              update("bestsellersSection", { ...value.bestsellersSection, enabled: checked })
+            }
+          />
+          Show this section on the homepage
+        </label>
+        <Input
+          placeholder="Title"
+          value={value.bestsellersSection.title}
+          onChange={(e) =>
+            update("bestsellersSection", { ...value.bestsellersSection, title: e.target.value })
+          }
+        />
+        <Input
+          placeholder="Subtitle"
+          value={value.bestsellersSection.subtitle}
+          onChange={(e) =>
+            update("bestsellersSection", { ...value.bestsellersSection, subtitle: e.target.value })
+          }
+        />
+        <Input
+          type="number"
+          min={1}
+          max={24}
+          placeholder="Number of products to show"
+          value={value.bestsellersSection.limit}
+          onChange={(e) =>
+            update("bestsellersSection", {
+              ...value.bestsellersSection,
+              limit: Number(e.target.value),
+            })
+          }
+        />
+      </Section>
+
       <Section title="Founders / Our Message">
         {value.founders.map((founder, i) => (
           <div key={i} className="border-border flex flex-col gap-2 rounded-lg border p-3">
@@ -368,6 +426,50 @@ export function HomeContentForm({ initial }: { initial: HomeContentValue }) {
         >
           <Plus className="size-3.5" /> Add Founder
         </Button>
+      </Section>
+
+      <Section title="Brand Statement (Our Message hero image + words)">
+        <p className="text-muted-foreground text-sm">
+          The founder bios shown alongside this image come from the first 2 entries in
+          &ldquo;Founders / Our Message&rdquo; above.
+        </p>
+        <ImageUploader
+          images={
+            value.brandStatement.image
+              ? [
+                  {
+                    url: value.brandStatement.image,
+                    publicId: value.brandStatement.publicId,
+                    alt: "",
+                    order: 0,
+                  },
+                ]
+              : []
+          }
+          onChange={(imgs) => {
+            update("brandStatement", {
+              ...value.brandStatement,
+              image: imgs[0]?.url ?? "",
+              publicId: imgs[0]?.publicId ?? "",
+            });
+          }}
+          folder={cloudinaryFolders.homepageBrandStatement}
+          maxFiles={1}
+        />
+        <div className="flex gap-2">
+          {[0, 1, 2].map((i) => (
+            <Input
+              key={i}
+              placeholder={`Word ${i + 1}`}
+              value={value.brandStatement.words[i] ?? ""}
+              onChange={(e) => {
+                const words = [...value.brandStatement.words];
+                words[i] = e.target.value;
+                update("brandStatement", { ...value.brandStatement, words });
+              }}
+            />
+          ))}
+        </div>
       </Section>
 
       <Section title="Why Choose Us">

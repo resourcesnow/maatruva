@@ -20,9 +20,7 @@ export function MobileMenu({ categories }: { categories: CategoryNode[] }) {
 
   return (
     <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
-      <SheetTrigger
-        render={<Button variant="ghost" size="icon" className="lg:hidden" aria-label="Open menu" />}
-      >
+      <SheetTrigger render={<Button variant="ghost" size="icon" aria-label="Open menu" />}>
         <Menu className="size-5" />
       </SheetTrigger>
       <SheetContent side="left" className="w-full sm:max-w-xs">

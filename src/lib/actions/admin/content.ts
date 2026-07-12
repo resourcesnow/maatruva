@@ -22,6 +22,7 @@ async function cleanupRemovedHomeContentImages(
     ...before.heroSlides.map((s) => s.publicId),
     ...before.featuredBanners.map((b) => b.publicId),
     ...before.founders.map((f) => f.photoPublicId),
+    before.brandStatement?.publicId,
   ].filter((id): id is string => !!id);
 
   const afterIds = new Set(
@@ -29,6 +30,7 @@ async function cleanupRemovedHomeContentImages(
       ...after.heroSlides.map((s) => s.publicId),
       ...after.featuredBanners.map((b) => b.publicId),
       ...after.founders.map((f) => f.photoPublicId),
+      after.brandStatement?.publicId,
     ].filter(Boolean),
   );
 

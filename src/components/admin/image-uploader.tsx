@@ -1,5 +1,6 @@
 "use client";
 
+import { useCallback, useMemo, useRef } from "react";
 import { CldUploadWidget, CldImage } from "next-cloudinary";
 import { ArrowLeft, ArrowRight, Star, Upload, X } from "lucide-react";
 import { toast } from "sonner";
@@ -20,18 +21,46 @@ export function ImageUploader({
 }) {
   const atLimit = typeof maxFiles === "number" && images.length >= maxFiles;
 
-  function handleSuccess(result: { event?: string; info?: unknown }) {
+  // The Cloudinary widget renders its own overlay outside React's tree (portaled onto
+  // document.body), so it must stay mounted continuously — conditionally unmounting
+  // <CldUploadWidget> (e.g. once atLimit flips true right after a maxFiles=1 upload) can race
+  // its own close animation and leave that overlay orphaned in the DOM, silently capturing every
+  // click on the page. Keep the widget always mounted and only hide its trigger button instead.
+  // Likewise, keep onSuccess/options referentially stable across re-renders — this form's state
+  // lives in one object, so any keystroke anywhere re-renders every ImageUploader on the page,
+  // and unstable props would otherwise cause the underlying widget to be torn down and recreated
+  // constantly, including mid-upload.
+  const latest = useRef({ images, onChange, maxFiles });
+  latest.current = { images, onChange, maxFiles };
+
+  const handleSuccess = useCallback((result: { event?: string; info?: unknown }) => {
     if (result.event !== "success") return;
     const info = result.info;
     if (!info || typeof info === "string") return;
     const asset = info as { secure_url: string; public_id: string };
 
+    const {
+      images: currentImages,
+      onChange: currentOnChange,
+      maxFiles: currentMaxFiles,
+    } = latest.current;
     const next = [
-      ...images,
-      { url: asset.secure_url, publicId: asset.public_id, alt: "", order: images.length },
+      ...currentImages,
+      { url: asset.secure_url, publicId: asset.public_id, alt: "", order: currentImages.length },
     ];
-    onChange(maxFiles ? next.slice(-maxFiles) : next);
-  }
+    currentOnChange(currentMaxFiles ? next.slice(-currentMaxFiles) : next);
+  }, []);
+
+  const widgetOptions = useMemo(
+    () => ({
+      folder,
+      multiple: !maxFiles || maxFiles > 1,
+      sources: ["local", "url", "camera"] as ("local" | "url" | "camera")[],
+      clientAllowedFormats: ["image"],
+      maxImageFileSize: 10 * 1024 * 1024,
+    }),
+    [folder, maxFiles],
+  );
 
   function move(index: number, dir: -1 | 1) {
     const next = [...images];
@@ -139,20 +168,13 @@ export function ImageUploader({
           </div>
         ))}
 
-        {!atLimit && (
-          <CldUploadWidget
-            signatureEndpoint="/api/cloudinary/sign"
-            onSuccess={handleSuccess}
-            options={{
-              folder,
-              multiple: !maxFiles || maxFiles > 1,
-              maxFiles: maxFiles ? maxFiles - images.length : undefined,
-              sources: ["local", "url", "camera"],
-              clientAllowedFormats: ["image"],
-              maxImageFileSize: 10 * 1024 * 1024,
-            }}
-          >
-            {({ open }) => (
+        <CldUploadWidget
+          signatureEndpoint="/api/cloudinary/sign"
+          onSuccess={handleSuccess}
+          options={widgetOptions}
+        >
+          {({ open }) =>
+            atLimit ? null : (
               <button
                 type="button"
                 onClick={() => open()}
@@ -161,9 +183,9 @@ export function ImageUploader({
                 <Upload className="size-5" />
                 <span className="text-xs">Upload</span>
               </button>
-            )}
-          </CldUploadWidget>
-        )}
+            )
+          }
+        </CldUploadWidget>
       </div>
 
       {images.length === 0 && (

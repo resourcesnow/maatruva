@@ -11,7 +11,7 @@ import { cn } from "@/lib/utils";
 export type HeroSlide = {
   image?: string;
   video?: string;
-  heading: string;
+  heading?: string;
   subheading?: string;
   ctaLabel?: string;
   ctaHref?: string;
@@ -30,7 +30,7 @@ export function Hero({ slides }: { slides: HeroSlide[] }) {
   const slide = slides[index];
 
   return (
-    <section className="bg-foreground relative h-[70vh] min-h-[420px] w-full overflow-hidden md:h-[85vh]">
+    <section className="bg-foreground relative aspect-[4/3] w-full overflow-hidden">
       <AnimatePresence mode="sync">
         <motion.div
           key={index}
@@ -43,11 +43,12 @@ export function Hero({ slides }: { slides: HeroSlide[] }) {
           {slide.image && (
             <Image
               src={slide.image}
-              alt={slide.heading}
+              alt={slide.heading || "Hero image"}
               fill
               priority={index === 0}
               sizes="100vw"
-              className="object-cover"
+              quality={90}
+              className="h-full w-full object-cover object-center"
             />
           )}
           <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-black/10" />
@@ -62,9 +63,11 @@ export function Hero({ slides }: { slides: HeroSlide[] }) {
           transition={{ duration: 0.6, delay: 0.15 }}
           className="flex max-w-lg flex-col gap-4 text-white"
         >
-          <h1 className="font-heading text-4xl leading-tight font-semibold md:text-6xl">
-            {slide.heading}
-          </h1>
+          {slide.heading && (
+            <h1 className="font-heading text-4xl leading-tight font-semibold md:text-6xl">
+              {slide.heading}
+            </h1>
+          )}
           {slide.subheading && (
             <p className="text-base text-white/90 md:text-lg">{slide.subheading}</p>
           )}
