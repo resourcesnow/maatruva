@@ -16,6 +16,7 @@
     "import:products": "tsx scripts/import-products.ts",
     "import:master-file": "tsx scripts/import-master-file.ts",
     "promote:super-admin": "tsx scripts/promote-super-admin.ts",
+    "sync:shipments": "tsx scripts/sync-shipment-status.ts",
     "prepare": "husky"
   },
   "lint-staged": {

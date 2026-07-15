@@ -6,11 +6,17 @@ const passwordSchema = z
   .regex(/[a-zA-Z]/, "Password must contain at least one letter.")
   .regex(/[0-9]/, "Password must contain at least one number.");
 
-export const signupSchema = z.object({
-  name: z.string().trim().min(2, "Name is required."),
-  email: z.string().trim().toLowerCase().email("Enter a valid email address."),
-  password: passwordSchema,
-});
+export const signupSchema = z
+  .object({
+    name: z.string().trim().min(2, "Name is required."),
+    email: z.string().trim().toLowerCase().email("Enter a valid email address."),
+    password: passwordSchema,
+    confirmPassword: z.string(),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "Passwords do not match.",
+    path: ["confirmPassword"],
+  });
 
 export const loginSchema = z.object({
   email: z.string().trim().toLowerCase().email("Enter a valid email address."),
@@ -35,3 +41,31 @@ export const resetPasswordSchema = z.object({
   token: z.string().min(1, "Reset token is required."),
   password: passwordSchema,
 });
+
+// Customer-facing OTP-code password reset — distinct from the admin token-link flow above.
+export const customerForgotPasswordSchema = z.object({
+  email: z.string().trim().toLowerCase().email("Enter a valid email address."),
+});
+
+export const customerResetPasswordSchema = z
+  .object({
+    email: z.string().trim().toLowerCase().email("Enter a valid email address."),
+    code: z.string().length(6, "Enter the 6-digit code."),
+    password: passwordSchema,
+    confirmPassword: z.string(),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "Passwords do not match.",
+    path: ["confirmPassword"],
+  });
+
+export const changePasswordSchema = z
+  .object({
+    code: z.string().length(6, "Enter the 6-digit code."),
+    password: passwordSchema,
+    confirmPassword: z.string(),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "Passwords do not match.",
+    path: ["confirmPassword"],
+  });

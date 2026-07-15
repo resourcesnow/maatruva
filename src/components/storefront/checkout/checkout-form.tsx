@@ -158,8 +158,34 @@ export function CheckoutForm({
           } else {
             toast.error("Payment verification failed. Contact support.");
           }
+          setSubmitting(false);
         },
-        modal: { ondismiss: () => setSubmitting(false) },
+        modal: {
+          ondismiss: () => {
+            setSubmitting(false);
+            fetch("/api/razorpay/fail", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                razorpayOrderId: data.razorpayOrderId,
+                reason: "Checkout closed before completing payment",
+              }),
+            }).catch(() => {});
+            toast.info("Payment cancelled. Your cart is still saved.");
+          },
+        },
+      });
+      razorpay.on("payment.failed", (response) => {
+        setSubmitting(false);
+        fetch("/api/razorpay/fail", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            razorpayOrderId: data.razorpayOrderId,
+            reason: response.error.description || response.error.reason,
+          }),
+        }).catch(() => {});
+        toast.error(response.error.description || "Payment failed. Please try again.");
       });
       razorpay.open();
     } catch {

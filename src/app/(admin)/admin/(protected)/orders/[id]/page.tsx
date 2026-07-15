@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getOrderById } from "@/lib/data/orders";
 import { OrderStatusSelect } from "@/components/admin/orders/order-status-select";
+import { RefreshTrackingButton } from "@/components/admin/orders/refresh-tracking-button";
 import { formatINR } from "@/lib/format";
 
 export const metadata: Metadata = { title: "Order Detail" };
@@ -71,13 +72,41 @@ export default async function AdminOrderDetailPage({
         <p className="text-muted-foreground text-sm">Provider: {order.payment.provider}</p>
       </div>
 
+      {order.deliveryMethod === "delivery" && (
+        <div className="border-border rounded-xl border p-5">
+          <div className="mb-2 flex items-center justify-between">
+            <h2 className="font-heading text-lg font-semibold">Shipping</h2>
+            {order.shipping?.shipmentId && <RefreshTrackingButton orderId={order._id} />}
+          </div>
+          {order.shipping?.shipmentId ? (
+            <div className="flex flex-col gap-1 text-sm">
+              <p className="capitalize">Status: {order.shipping.status ?? "unknown"}</p>
+              {order.shipping.courierName && <p>Courier: {order.shipping.courierName}</p>}
+              {order.shipping.awbCode && <p>AWB: {order.shipping.awbCode}</p>}
+              {order.shipping.lastError && (
+                <p className="text-destructive mt-1">{order.shipping.lastError}</p>
+              )}
+            </div>
+          ) : (
+            <p className="text-muted-foreground text-sm">
+              {order.payment.status === "paid"
+                ? "Shipment not created yet."
+                : "Shipment will be created once payment is confirmed."}
+            </p>
+          )}
+        </div>
+      )}
+
       <div className="border-border rounded-xl border p-5">
         <h2 className="font-heading mb-2 text-lg font-semibold">Timeline</h2>
         <ul className="flex flex-col gap-2 text-sm">
           {order.timeline.map((t, i) => (
-            <li key={i} className="flex justify-between">
-              <span className="capitalize">{t.status}</span>
-              <span className="text-muted-foreground">{new Date(t.at).toLocaleString()}</span>
+            <li key={i} className="flex flex-col">
+              <div className="flex justify-between">
+                <span className="capitalize">{t.status}</span>
+                <span className="text-muted-foreground">{new Date(t.at).toLocaleString()}</span>
+              </div>
+              {t.note && <span className="text-muted-foreground text-xs">{t.note}</span>}
             </li>
           ))}
         </ul>

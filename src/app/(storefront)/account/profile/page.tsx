@@ -7,6 +7,8 @@ import { getUserReviews } from "@/lib/data/reviews";
 import { ProfileForm } from "@/components/storefront/account/profile-form";
 import { ProfileHeader } from "@/components/storefront/account/profile-header";
 import { AccountSummaryCards } from "@/components/storefront/account/account-summary-cards";
+import { ProfileCompletionBanner } from "@/components/storefront/account/profile-completion-banner";
+import { ChangePasswordCard } from "@/components/storefront/account/change-password-card";
 
 export const metadata: Metadata = { title: "My Profile" };
 export const dynamic = "force-dynamic";
@@ -37,13 +39,21 @@ export default async function ProfilePage() {
         latestOrder={orders[0] ?? null}
       />
 
+      {!profile.phone && <ProfileCompletionBanner />}
+
       <div className="flex flex-col gap-6">
         <h2 className="font-heading text-xl font-semibold">Edit Profile</h2>
         <ProfileForm
           name={profile.name}
           email={profile.email ?? ""}
+          phone={profile.phone ?? ""}
           role={profile.role ?? "customer"}
         />
+      </div>
+
+      <div className="flex flex-col gap-6">
+        <h2 className="font-heading text-xl font-semibold">Security</h2>
+        <ChangePasswordCard email={profile.email ?? ""} />
       </div>
     </div>
   );

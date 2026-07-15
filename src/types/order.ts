@@ -40,6 +40,9 @@ export type OrderSummary = {
     courierName?: string;
     trackingUrl?: string;
     status?: string;
+    lastError?: string;
+    estimatedDelivery?: string;
+    preDeliveryReminderSentAt?: string;
   };
   status: OrderStatus;
   timeline: { status: string; at: string; note?: string }[];

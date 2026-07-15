@@ -8,6 +8,11 @@ export const updateUserRoleSchema = z.object({
 export const profileSchema = z.object({
   name: z.string().min(2, "Name is required."),
   email: z.string().email().optional().or(z.literal("")),
+  phone: z
+    .string()
+    .regex(/^\+?[1-9]\d{9,14}$/, "Enter a valid phone number.")
+    .optional()
+    .or(z.literal("")),
 });
 
 export type ProfileInput = z.infer<typeof profileSchema>;

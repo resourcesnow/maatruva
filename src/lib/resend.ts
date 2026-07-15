@@ -10,6 +10,40 @@ function getClient() {
   return client;
 }
 
+// Shared send wrapper for all email templates (auth emails below, and the order-lifecycle
+// templates in order-emails.ts) — one place for the "no API key configured" dev fallback and
+// the from-address convention, so new templates don't duplicate this boilerplate.
+export async function sendEmail({
+  to,
+  subject,
+  html,
+  fromLabel,
+}: {
+  to: string;
+  subject: string;
+  html: string;
+  fromLabel?: string;
+}) {
+  const resend = getClient();
+  const fromEmail = process.env.RESEND_FROM_EMAIL || "onboarding@resend.dev";
+
+  if (!resend) {
+    console.warn(`[email] RESEND_API_KEY not configured. Would send "${subject}" to ${to}.`);
+    return;
+  }
+
+  const { error } = await resend.emails.send({
+    from: `${fromLabel ?? brand.name} <${fromEmail}>`,
+    to,
+    subject,
+    html,
+  });
+
+  if (error) {
+    throw new Error(`Failed to send email "${subject}": ${error.message}`);
+  }
+}
+
 export async function sendVerificationEmail(email: string, code: string) {
   const resend = getClient();
   const fromEmail = process.env.RESEND_FROM_EMAIL || "onboarding@resend.dev";

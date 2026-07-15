@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/db";
 import { Order } from "@/models/Order";
-import type { OrderStatus } from "@/types/order";
+import { applyShiprocketStatusUpdate, SHIPROCKET_STATUS_MAP } from "@/lib/shipment-status";
 
 // Shiprocket lets you set a custom header value when registering the webhook URL in their
 // dashboard (Settings > API > Webhooks). Set SHIPROCKET_WEBHOOK_SECRET to that same value.
@@ -11,20 +11,6 @@ function isAuthorized(req: Request) {
   const provided = req.headers.get("x-api-key") ?? req.headers.get("x-shiprocket-webhook-token");
   return provided === expected;
 }
-
-// Shiprocket's shipment status strings, mapped to our order status enum. Logged verbatim for
-// anything unrecognized so the mapping can be extended once real webhook traffic is seen.
-const STATUS_MAP: Record<string, OrderStatus> = {
-  "picked up": "packed",
-  "pickup generated": "packed",
-  "in transit": "shipped",
-  shipped: "shipped",
-  "out for delivery": "shipped",
-  delivered: "delivered",
-  cancelled: "cancelled",
-  canceled: "cancelled",
-  rto: "cancelled",
-};
 
 export async function POST(req: Request) {
   if (!isAuthorized(req)) {
@@ -57,27 +43,13 @@ export async function POST(req: Request) {
     return NextResponse.json({ ok: true });
   }
 
-  const mappedStatus = currentStatus ? STATUS_MAP[currentStatus.toLowerCase()] : undefined;
   if (!currentStatus) {
     console.error("[shiprocket] webhook missing current_status — raw payload:", body);
-  } else if (!mappedStatus) {
+  } else if (!SHIPROCKET_STATUS_MAP[currentStatus.toLowerCase()]) {
     console.error("[shiprocket] webhook: unrecognized status string:", currentStatus);
   }
 
-  order.shipping = {
-    ...order.shipping,
-    provider: order.shipping?.provider ?? "shiprocket",
-    status: currentStatus ?? order.shipping?.status,
-  };
-  if (mappedStatus && mappedStatus !== order.status) {
-    order.status = mappedStatus;
-    order.timeline.push({
-      status: mappedStatus,
-      at: new Date(),
-      note: `Shiprocket: ${currentStatus}`,
-    });
-  }
-  await order.save();
+  await applyShiprocketStatusUpdate(order, { currentStatus });
 
   return NextResponse.json({ ok: true });
 }

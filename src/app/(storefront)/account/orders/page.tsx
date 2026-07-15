@@ -4,6 +4,7 @@ import { auth } from "@/lib/auth";
 import { getUserOrders } from "@/lib/data/orders";
 import { OrderStatusBadge } from "@/components/storefront/order/order-status-badge";
 import { ReorderButton } from "@/components/storefront/order/reorder-button";
+import { SmartImage as Image } from "@/components/ui/smart-image";
 import { formatINR } from "@/lib/format";
 
 export const metadata: Metadata = { title: "My Orders" };
@@ -23,14 +24,28 @@ export default async function OrdersPage() {
         <ul className="flex flex-col gap-4">
           {orders.map((order) => (
             <li key={order._id} className="border-border rounded-xl border p-4">
-              <div className="flex flex-wrap items-center justify-between gap-2">
-                <div>
-                  <Link href={`/order/${order._id}`} className="font-medium hover:underline">
-                    #{order.orderNo}
-                  </Link>
-                  <p className="text-muted-foreground text-xs">
-                    {new Date(order.createdAt).toLocaleDateString()} · {order.items.length} item(s)
-                  </p>
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div className="flex items-center gap-3">
+                  <div className="bg-muted relative size-14 shrink-0 overflow-hidden rounded-lg">
+                    {order.items[0]?.image && (
+                      <Image
+                        src={order.items[0].image}
+                        alt={order.items[0].title}
+                        fill
+                        sizes="56px"
+                        className="object-cover"
+                      />
+                    )}
+                  </div>
+                  <div>
+                    <Link href={`/order/${order._id}`} className="font-medium hover:underline">
+                      #{order.orderNo}
+                    </Link>
+                    <p className="text-muted-foreground text-xs">
+                      {new Date(order.createdAt).toLocaleDateString()} · {order.items.length}{" "}
+                      item(s)
+                    </p>
+                  </div>
                 </div>
                 <div className="flex items-center gap-3">
                   <OrderStatusBadge status={order.status} />

@@ -4,6 +4,7 @@ import { CheckCircle2 } from "lucide-react";
 import { getOrderById } from "@/lib/data/orders";
 import { OrderStatusBadge } from "@/components/storefront/order/order-status-badge";
 import { OrderTimeline } from "@/components/storefront/order/order-timeline";
+import { SmartImage as Image } from "@/components/ui/smart-image";
 import { formatINR } from "@/lib/format";
 
 export const metadata: Metadata = { title: "Order Confirmation" };
@@ -39,10 +40,23 @@ export default async function OrderPage({ params }: { params: Promise<{ id: stri
 
         <div className="border-border flex flex-col gap-3 border-t pt-4">
           {order.items.map((item) => (
-            <div key={item.product} className="flex justify-between text-sm">
-              <span>
-                {item.title} × {item.qty}
-              </span>
+            <div key={item.product} className="flex items-center justify-between gap-3 text-sm">
+              <div className="flex items-center gap-3">
+                <div className="bg-muted relative size-12 shrink-0 overflow-hidden rounded-lg">
+                  {item.image && (
+                    <Image
+                      src={item.image}
+                      alt={item.title}
+                      fill
+                      sizes="48px"
+                      className="object-cover"
+                    />
+                  )}
+                </div>
+                <span>
+                  {item.title} × {item.qty}
+                </span>
+              </div>
               <span>{formatINR(item.price * item.qty)}</span>
             </div>
           ))}

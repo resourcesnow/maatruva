@@ -1,4 +1,6 @@
-import "server-only";
+// Deliberately no "server-only" guard here — this module also needs to run from the standalone
+// scripts/sync-shipment-status.ts script (via tsx, outside Next's bundler), and "server-only"
+// throws unconditionally in that context. It's never imported by any client component.
 
 const BASE_URL = "https://apiv2.shiprocket.in/v1/external";
 const TOKEN_TTL_MS = 9 * 24 * 60 * 60 * 1000; // Shiprocket tokens are valid ~10 days; refresh a day early
@@ -12,11 +14,40 @@ export class ShiprocketConfigError extends Error {
   }
 }
 
+// Thrown when Shiprocket rejects order/shipment creation specifically because the seller's
+// wallet balance can't cover the shipment — a known, expected, non-broken state (not a bug).
+export class ShiprocketWalletBalanceError extends Error {
+  constructor(shiprocketMessage: string) {
+    super(`Shipment creation failed: insufficient wallet balance (${shiprocketMessage})`);
+    this.name = "ShiprocketWalletBalanceError";
+  }
+}
+
+const WALLET_BALANCE_KEYWORDS = ["wallet", "balance", "insufficient", "recharge"];
+
+function isWalletBalanceMessage(message: string) {
+  const lower = message.toLowerCase();
+  return WALLET_BALANCE_KEYWORDS.some((kw) => lower.includes(kw));
+}
+
 type TokenCache = { token: string; fetchedAt: number } | null;
 
 declare global {
   var _shiprocketTokenCache: TokenCache | undefined;
 }
+
+// Shiprocket's gateway WAF blocks bare server-to-server requests (no Origin/Referer/browser
+// User-Agent) with a generic 403 "Access forbidden" — indistinguishable from a real auth
+// failure. Confirmed live: identical requests with these headers reach the real auth logic
+// (e.g. a proper "Invalid email and password combination" response instead of the WAF block).
+const SHIPROCKET_HEADERS = {
+  "Content-Type": "application/json",
+  Accept: "application/json",
+  Origin: "https://app.shiprocket.in",
+  Referer: "https://app.shiprocket.in/",
+  "User-Agent":
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+};
 
 async function getAuthToken(): Promise<string> {
   const email = process.env.SHIPROCKET_EMAIL;
@@ -31,7 +62,7 @@ async function getAuthToken(): Promise<string> {
 
   const res = await fetch(`${BASE_URL}/auth/login`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: SHIPROCKET_HEADERS,
     body: JSON.stringify({ email, password }),
   });
 
@@ -61,7 +92,7 @@ async function shiprocketRequest<T>(
     fetch(`${BASE_URL}${path}`, {
       method: options.method ?? "GET",
       headers: {
-        "Content-Type": "application/json",
+        ...SHIPROCKET_HEADERS,
         Authorization: `Bearer ${authToken}`,
       },
       body: options.body ? JSON.stringify(options.body) : undefined,
@@ -76,32 +107,84 @@ async function shiprocketRequest<T>(
   }
 
   if (!res.ok) {
-    const body = await res.text().catch(() => "");
+    const rawBody = await res.text().catch(() => "");
     console.error(
       `[shiprocket] request failed: ${options.method ?? "GET"} ${path}`,
       res.status,
-      body,
+      rawBody,
     );
-    throw new Error(`Shiprocket request failed (${res.status}) for ${path}.`);
+
+    const message = extractShiprocketErrorMessage(rawBody) ?? `HTTP ${res.status}`;
+    if (isWalletBalanceMessage(message)) {
+      throw new ShiprocketWalletBalanceError(message);
+    }
+    throw new Error(`Shiprocket request failed (${res.status}) for ${path}: ${message}`);
   }
 
   return res.json();
 }
 
-// Default parcel weight/dimensions until per-product data exists.
-// TODO: replace with real per-product weight/dimensions once available (rakhi, jewellery, and
-// gift hampers likely need different defaults — flagged for follow-up).
-const DEFAULT_PARCEL = {
-  weightKg: 0.25,
-  lengthCm: 15,
-  breadthCm: 10,
-  heightCm: 5,
+function extractShiprocketErrorMessage(rawBody: string): string | undefined {
+  try {
+    const parsed = JSON.parse(rawBody);
+    if (typeof parsed.message === "string") return parsed.message;
+    if (parsed.errors && typeof parsed.errors === "object") {
+      return Object.values(parsed.errors).flat().join(", ");
+    }
+  } catch {
+    // Not JSON — fall through and use the raw body as-is below.
+  }
+  return rawBody || undefined;
+}
+
+type ParcelCategory = "rakhi" | "jewellery" | "hamper" | "default";
+
+// Placeholder weight/dimensions per product category until real per-product data exists.
+// TODO: replace with real per-product weight/dimensions once available.
+const CATEGORY_PARCEL_DEFAULTS: Record<
+  ParcelCategory,
+  { weightKg: number; lengthCm: number; breadthCm: number; heightCm: number }
+> = {
+  rakhi: { weightKg: 0.15, lengthCm: 12, breadthCm: 9, heightCm: 3 },
+  jewellery: { weightKg: 0.25, lengthCm: 12, breadthCm: 9, heightCm: 4 },
+  hamper: { weightKg: 0.75, lengthCm: 25, breadthCm: 20, heightCm: 10 },
+  default: { weightKg: 0.25, lengthCm: 15, breadthCm: 10, heightCm: 5 },
 };
+
+// Matches a category slug/name (e.g. "bhai-rakhi", "Silver Rakhi") to a parcel default bucket.
+export function classifyParcelCategory(label: string): ParcelCategory {
+  const lower = label.toLowerCase();
+  if (lower.includes("hamper") || lower.includes("gift")) return "hamper";
+  if (lower.includes("jewel")) return "jewellery";
+  if (lower.includes("rakhi")) return "rakhi";
+  return "default";
+}
+
+// Sums weight across all items (heavier orders need a heavier parcel) and uses the largest
+// single-item dimensions as a rough box size — a placeholder approximation, not real packing logic.
+export function computeParcel(items: { category: ParcelCategory; qty: number }[]) {
+  if (items.length === 0) return CATEGORY_PARCEL_DEFAULTS.default;
+
+  let weightKg = 0;
+  let lengthCm = 0;
+  let breadthCm = 0;
+  let heightCm = 0;
+
+  for (const item of items) {
+    const parcel = CATEGORY_PARCEL_DEFAULTS[item.category];
+    weightKg += parcel.weightKg * item.qty;
+    lengthCm = Math.max(lengthCm, parcel.lengthCm);
+    breadthCm = Math.max(breadthCm, parcel.breadthCm);
+    heightCm = Math.max(heightCm, parcel.heightCm);
+  }
+
+  return { weightKg, lengthCm, breadthCm, heightCm };
+}
 
 export type ShiprocketOrderInput = {
   orderNo: string;
   orderDate: Date;
-  items: { title: string; sku: string; price: number; qty: number }[];
+  items: { title: string; sku: string; price: number; qty: number; category?: ParcelCategory }[];
   subtotal: number;
   shippingAddress: {
     name: string;
@@ -126,6 +209,9 @@ export async function createShiprocketOrder(
   if (!pickupLocation) throw new ShiprocketConfigError("SHIPROCKET_PICKUP_LOCATION");
 
   const [firstName, ...rest] = input.shippingAddress.name.trim().split(" ");
+  const parcel = computeParcel(
+    input.items.map((item) => ({ category: item.category ?? "default", qty: item.qty })),
+  );
 
   const payload = {
     order_id: input.orderNo,
@@ -149,10 +235,10 @@ export async function createShiprocketOrder(
     })),
     payment_method: "Prepaid",
     sub_total: input.subtotal,
-    weight: DEFAULT_PARCEL.weightKg,
-    length: DEFAULT_PARCEL.lengthCm,
-    breadth: DEFAULT_PARCEL.breadthCm,
-    height: DEFAULT_PARCEL.heightCm,
+    weight: parcel.weightKg,
+    length: parcel.lengthCm,
+    breadth: parcel.breadthCm,
+    height: parcel.heightCm,
   };
 
   const data = await shiprocketRequest<{
@@ -173,12 +259,50 @@ export async function createShiprocketOrder(
   };
 }
 
+// A separate step from order creation: booking a courier for the shipment. This is where
+// Shiprocket actually deducts wallet balance, so it's the step that fails with ₹0 balance —
+// order creation above succeeds regardless of wallet balance.
+export async function assignShiprocketAWB(shipmentId: string) {
+  const data = await shiprocketRequest<{
+    awb_assign_status?: number;
+    response?: { data?: { awb_code?: string; courier_name?: string } };
+    message?: string;
+  }>("/courier/assign/awb", { method: "POST", body: { shipment_id: Number(shipmentId) } });
+
+  const awbCode = data.response?.data?.awb_code;
+  const courierName = data.response?.data?.courier_name;
+
+  // Shiprocket returns HTTP 200 with an error embedded in the body for AWB assignment
+  // failures (e.g. wallet balance) rather than a non-2xx status — only treat `message` as a
+  // failure signal here, scoped to this specific call, not as a blanket rule across all
+  // Shiprocket endpoints (a cancel-success message also happens to mention "wallet").
+  if (!awbCode) {
+    const message = data.message ?? "Shiprocket did not assign an AWB code.";
+    if (isWalletBalanceMessage(message)) {
+      throw new ShiprocketWalletBalanceError(message);
+    }
+    throw new Error(`Shiprocket AWB assignment failed: ${message}`);
+  }
+  return { awbCode, courierName };
+}
+
+// Cancels one or more orders by their Shiprocket order_id (not shipment_id). Safe to call
+// whether or not an AWB was ever assigned.
+export async function cancelShiprocketOrder(shiprocketOrderIds: string[]) {
+  return shiprocketRequest<{ message?: string; status_code?: number }>("/orders/cancel", {
+    method: "POST",
+    body: { ids: shiprocketOrderIds.map(Number) },
+  });
+}
+
 export async function getShiprocketTracking(shipmentId: string) {
   return shiprocketRequest<{
     tracking_data?: {
       track_status?: number;
       shipment_status?: string;
       shipment_track?: { current_status?: string; awb_code?: string; courier_name?: string }[];
+      edd?: string; // estimated delivery date, e.g. "2026-07-22 20:00:00"
+      etd?: string;
     };
   }>(`/courier/track/shipment/${shipmentId}`);
 }

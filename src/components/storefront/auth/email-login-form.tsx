@@ -7,9 +7,11 @@ import { Input } from "@/components/ui/input";
 import { PasswordInput } from "@/components/ui/password-input";
 import { Button } from "@/components/ui/button";
 import { EmailVerifyStep } from "./email-verify-step";
+import { ForgotPasswordStep } from "./forgot-password-step";
 
 export function EmailLoginForm({ callbackUrl }: { callbackUrl: string }) {
   const [needsVerification, setNeedsVerification] = useState(false);
+  const [forgotPassword, setForgotPassword] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [pending, startTransition] = useTransition();
@@ -50,6 +52,15 @@ export function EmailLoginForm({ callbackUrl }: { callbackUrl: string }) {
     );
   }
 
+  if (forgotPassword) {
+    return (
+      <ForgotPasswordStep
+        onBack={() => setForgotPassword(false)}
+        onDone={() => setForgotPassword(false)}
+      />
+    );
+  }
+
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-3">
       <Input
@@ -67,6 +78,13 @@ export function EmailLoginForm({ callbackUrl }: { callbackUrl: string }) {
         value={password}
         onChange={(e) => setPassword(e.target.value)}
       />
+      <button
+        type="button"
+        onClick={() => setForgotPassword(true)}
+        className="text-muted-foreground -mt-1 self-end text-xs underline"
+      >
+        Forgot password?
+      </button>
       <Button type="submit" disabled={pending}>
         {pending ? "Logging in..." : "Log in"}
       </Button>

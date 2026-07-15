@@ -64,6 +64,9 @@ const orderSchema = new Schema(
       courierName: { type: String },
       trackingUrl: { type: String },
       status: { type: String },
+      lastError: { type: String },
+      estimatedDelivery: { type: Date },
+      preDeliveryReminderSentAt: { type: Date },
     },
     status: {
       type: String,

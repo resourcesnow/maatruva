@@ -12,15 +12,22 @@ export function EmailSignupForm({ callbackUrl }: { callbackUrl: string }) {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [confirmError, setConfirmError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (password !== confirmPassword) {
+      setConfirmError("Passwords do not match.");
+      return;
+    }
+    setConfirmError(null);
     startTransition(async () => {
       const res = await fetch("/api/auth/signup", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, email, password }),
+        body: JSON.stringify({ name, email, password, confirmPassword }),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -72,6 +79,19 @@ export function EmailSignupForm({ callbackUrl }: { callbackUrl: string }) {
       <p className="text-muted-foreground text-xs">
         At least 8 characters, with a letter and a number.
       </p>
+      <PasswordInput
+        required
+        placeholder="Confirm password"
+        autoComplete="new-password"
+        minLength={8}
+        value={confirmPassword}
+        onChange={(e) => {
+          setConfirmPassword(e.target.value);
+          if (confirmError) setConfirmError(null);
+        }}
+        aria-invalid={!!confirmError}
+      />
+      {confirmError && <p className="text-destructive text-xs">{confirmError}</p>}
       <Button type="submit" disabled={pending}>
         {pending ? "Creating account..." : "Create account"}
       </Button>
