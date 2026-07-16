@@ -16,25 +16,25 @@ export async function POST(req: Request) {
 
   const { email, password } = parsed.data;
 
-  await connectDB();
-  const user = await User.findOne({ email }).select("+password");
-  if (!user || !user.password || !verifyPassword(password, user.password)) {
-    return NextResponse.json({ error: "Invalid email or password." }, { status: 401 });
-  }
-  if (!user.emailVerified) {
-    return NextResponse.json(
-      { error: "Please verify your email before logging in.", code: "not_verified" },
-      { status: 403 },
-    );
-  }
-
   try {
     await signIn("email-password", { email, password, redirect: false });
     return NextResponse.json({ ok: true });
   } catch (err) {
-    if (err instanceof AuthError) {
-      return NextResponse.json({ error: "Invalid email or password." }, { status: 401 });
+    if (!(err instanceof AuthError)) throw err;
+
+    // authorize() (src/lib/auth.ts) already ran above and is the single source of truth for
+    // lockout tracking — it increments failedLoginAttempts / sets lockedUntil regardless of
+    // *why* sign-in failed. This is a read-only re-check purely to choose which client-facing
+    // message to show; it must never run before signIn(), or a wrong-password attempt would
+    // never reach authorize() and lockout tracking would silently never trigger.
+    await connectDB();
+    const user = await User.findOne({ email }).select("+password emailVerified");
+    if (user?.password && verifyPassword(password, user.password) && !user.emailVerified) {
+      return NextResponse.json(
+        { error: "Please verify your email before logging in.", code: "not_verified" },
+        { status: 403 },
+      );
     }
-    throw err;
+    return NextResponse.json({ error: "Invalid email or password." }, { status: 401 });
   }
 }

@@ -22,7 +22,6 @@ async function requireUser() {
 export async function updateProfileAction(_prevState: unknown, formData: FormData) {
   const parsed = profileSchema.safeParse({
     name: formData.get("name"),
-    email: formData.get("email"),
     phone: formData.get("phone") || "",
   });
   if (!parsed.success) return { ok: false, error: parsed.error.issues[0].message };

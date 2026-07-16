@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useEffect, useRef } from "react";
+import { useActionState, useEffect, useId, useRef } from "react";
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -25,6 +25,11 @@ export function AddressForm({ address, onSaved }: { address?: Address; onSaved?:
   const action = address ? updateAddressAction.bind(null, address.id) : addAddressAction;
   const [state, formAction, pending] = useActionState(action, initialState);
   const formRef = useRef<HTMLFormElement>(null);
+  // Prefixed so ids stay unique even when an inline edit form and the always-visible "Add
+  // Address" form are both mounted on the page at once — duplicate ids break label
+  // association/accessibility, not just test selectors.
+  const uid = useId();
+  const fieldId = (name: string) => `${uid}-${name}`;
 
   useEffect(() => {
     if (state.ok) {
@@ -44,18 +49,18 @@ export function AddressForm({ address, onSaved }: { address?: Address; onSaved?:
       className="border-border grid grid-cols-1 gap-3 rounded-xl border p-4 sm:grid-cols-2"
     >
       <div className="flex flex-col gap-1.5">
-        <Label htmlFor="label">Label</Label>
+        <Label htmlFor={fieldId("label")}>Label</Label>
         <Input
-          id="label"
+          id={fieldId("label")}
           name="label"
           placeholder="e.g. Home, Work, Office"
           defaultValue={address?.label ?? "Home"}
         />
       </div>
       <div className="flex flex-col gap-1.5">
-        <Label htmlFor="phone">Phone</Label>
+        <Label htmlFor={fieldId("phone")}>Phone</Label>
         <Input
-          id="phone"
+          id={fieldId("phone")}
           name="phone"
           required
           placeholder="+91 98765 43210"
@@ -63,24 +68,30 @@ export function AddressForm({ address, onSaved }: { address?: Address; onSaved?:
         />
       </div>
       <div className="flex flex-col gap-1.5 sm:col-span-2">
-        <Label htmlFor="line1">Address Line 1</Label>
-        <Input id="line1" name="line1" required defaultValue={address?.line1} />
+        <Label htmlFor={fieldId("line1")}>Address Line 1</Label>
+        <Input id={fieldId("line1")} name="line1" required defaultValue={address?.line1} />
       </div>
       <div className="flex flex-col gap-1.5 sm:col-span-2">
-        <Label htmlFor="line2">Address Line 2 (optional)</Label>
-        <Input id="line2" name="line2" defaultValue={address?.line2} />
+        <Label htmlFor={fieldId("line2")}>Address Line 2 (optional)</Label>
+        <Input id={fieldId("line2")} name="line2" defaultValue={address?.line2} />
       </div>
       <div className="flex flex-col gap-1.5">
-        <Label htmlFor="city">City</Label>
-        <Input id="city" name="city" required defaultValue={address?.city} />
+        <Label htmlFor={fieldId("city")}>City</Label>
+        <Input id={fieldId("city")} name="city" required defaultValue={address?.city} />
       </div>
       <div className="flex flex-col gap-1.5">
-        <Label htmlFor="state">State</Label>
-        <Input id="state" name="state" required defaultValue={address?.state} />
+        <Label htmlFor={fieldId("state")}>State</Label>
+        <Input id={fieldId("state")} name="state" required defaultValue={address?.state} />
       </div>
       <div className="flex flex-col gap-1.5">
-        <Label htmlFor="pincode">Pincode</Label>
-        <Input id="pincode" name="pincode" required maxLength={6} defaultValue={address?.pincode} />
+        <Label htmlFor={fieldId("pincode")}>Pincode</Label>
+        <Input
+          id={fieldId("pincode")}
+          name="pincode"
+          required
+          maxLength={6}
+          defaultValue={address?.pincode}
+        />
       </div>
       <label className="flex items-center gap-2 self-end text-sm">
         <input
