@@ -160,7 +160,7 @@ export function BrandStatement({
 
           <div
             ref={imageWrapRef}
-            className="shadow-warm-lg relative z-10 aspect-[900/1100] h-[58vh] max-h-[560px] overflow-hidden"
+            className="shadow-warm-lg relative z-10 aspect-900/1100 h-[58vh] max-h-140 overflow-hidden"
           >
             <Image
               src={image}
@@ -175,7 +175,7 @@ export function BrandStatement({
         {/* Mobile: simple stack. */}
         <div className="flex w-full flex-col items-center gap-4 sm:hidden">
           <span className="text-maroon/50 font-serif text-4xl">{words[0]}</span>
-          <div className="shadow-warm relative aspect-[900/1100] w-56 overflow-hidden">
+          <div className="shadow-warm relative aspect-900/1100 w-56 overflow-hidden">
             <Image src={image} alt="" fill sizes="224px" className="object-cover" />
           </div>
           <span className="text-gold/70 font-serif text-4xl">{words[1]}</span>
