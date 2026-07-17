@@ -3,6 +3,7 @@ import { Playfair_Display, Inter } from "next/font/google";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/components/providers/session-provider";
+import { SmoothScrollProvider } from "@/components/providers/smooth-scroll-provider";
 import { auth } from "@/lib/auth";
 import { brand } from "@/lib/brand";
 import "./globals.css";
@@ -44,6 +45,7 @@ export default async function RootLayout({
       <body className="flex min-h-full flex-col">
         <AuthProvider session={session}>
           <TooltipProvider delay={200}>
+            <SmoothScrollProvider />
             {children}
             <Toaster position="bottom-right" richColors closeButton />
           </TooltipProvider>

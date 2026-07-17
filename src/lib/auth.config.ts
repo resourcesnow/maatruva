@@ -6,6 +6,10 @@ import Google from "next-auth/providers/google";
  * auth.ts config used in Route Handlers / Server Components.
  */
 export const authConfig: NextAuthConfig = {
+  // Vercel auto-detects its own host and trusts it; self-hosted/non-Vercel production
+  // (e.g. `next start` behind a reverse proxy) needs this explicit or every session
+  // check 500s with UntrustedHost.
+  trustHost: true,
   providers: [
     Google({
       clientId: process.env.GOOGLE_CLIENT_ID,

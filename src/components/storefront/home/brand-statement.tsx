@@ -192,13 +192,15 @@ export function BrandStatement({
                   className={`flex flex-col gap-3 ${isRight ? "items-end text-right" : "items-start text-left"}`}
                 >
                   <div className="shadow-warm relative size-14 shrink-0 overflow-hidden rounded-full">
-                    <Image
-                      src={founder.photo ?? ""}
-                      alt={founder.name}
-                      fill
-                      sizes="56px"
-                      className="object-cover"
-                    />
+                    {founder.photo && (
+                      <Image
+                        src={founder.photo}
+                        alt={founder.name}
+                        fill
+                        sizes="56px"
+                        className="object-cover"
+                      />
+                    )}
                   </div>
                   <div className={`flex flex-col gap-1 ${isRight ? "items-end" : "items-start"}`}>
                     <p className="text-maroon font-sans text-sm font-semibold md:text-base">
