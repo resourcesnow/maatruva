@@ -32,17 +32,35 @@ export function SmoothScrollProvider() {
     gsap.registerPlugin(ScrollTrigger);
     lenis.on("scroll", ScrollTrigger.update);
 
-    // Drive Lenis off GSAP's ticker (rather than its own rAF loop) so it and
-    // ScrollTrigger-based animations (e.g. the homepage brand-statement
-    // section) stay on the same frame clock and never drift apart.
-    const tickerCallback = (time: number) => {
-      lenis.raf(time * 1000);
-    };
-    gsap.ticker.add(tickerCallback);
-    gsap.ticker.lagSmoothing(0);
+    // Drive Lenis off its own rAF loop rather than gsap.ticker: routes that never
+    // otherwise touch gsap (e.g. admin, which has no ScrollTrigger usage) can end up
+    // on a separately-chunked gsap module instance in production, silently detaching
+    // Lenis from the ticker it registered against. An independent rAF loop has no such
+    // dependency, and ScrollTrigger still stays in sync via the "scroll" listener above.
+    let rafId: number;
+    function raf(time: number) {
+      lenis.raf(time);
+      rafId = requestAnimationFrame(raf);
+    }
+    rafId = requestAnimationFrame(raf);
+
+    // Lenis's built-in autoResize watches document.documentElement's own box size, which
+    // never changes on this site (it's pinned to 100% viewport height via the `h-full`
+    // class) — so it never notices content growing, e.g. when a Suspense `loading.tsx`
+    // skeleton is replaced by full-height streamed-in content. Without this, Lenis keeps
+    // its stale zero-scroll-height reading from the skeleton forever. Re-measure whenever
+    // the DOM actually changes instead.
+    let resizeTimeout: ReturnType<typeof setTimeout>;
+    const mutationObserver = new MutationObserver(() => {
+      clearTimeout(resizeTimeout);
+      resizeTimeout = setTimeout(() => lenis.resize(), 100);
+    });
+    mutationObserver.observe(document.body, { childList: true, subtree: true });
 
     return () => {
-      gsap.ticker.remove(tickerCallback);
+      clearTimeout(resizeTimeout);
+      mutationObserver.disconnect();
+      cancelAnimationFrame(rafId);
       lenis.destroy();
       lenisRef.current = null;
     };
