@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { MotionConfig } from "framer-motion";
 import { Playfair_Display, Inter } from "next/font/google";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -42,13 +43,23 @@ export default async function RootLayout({
       suppressHydrationWarning
       className={`${bodyFont.variable} ${displayFont.variable} h-full antialiased`}
     >
-      <body className="flex min-h-full flex-col">
+      {/* overflow-x-hidden here is a deliberate safety net, not a substitute for fixing
+          layout bugs: it guarantees no page-level sideways scroll can ever appear (e.g. from
+          a decorative absolutely-positioned element on a marketing section) without
+          interfering with position:sticky, which breaks if this is applied on <html> instead. */}
+      <body className="flex min-h-full flex-col overflow-x-hidden">
         <AuthProvider session={session}>
-          <TooltipProvider delay={200}>
-            <SmoothScrollProvider />
-            {children}
-            <Toaster position="bottom-right" richColors closeButton />
-          </TooltipProvider>
+          {/* reducedMotion="user" makes every Framer Motion animation in the app (not just
+              ones we explicitly gate) automatically honor the OS prefers-reduced-motion
+              setting — transform-driven motion (x/y/scale/rotate) is disabled, opacity
+              crossfades remain. */}
+          <MotionConfig reducedMotion="user">
+            <TooltipProvider delay={200}>
+              <SmoothScrollProvider />
+              {children}
+              <Toaster position="bottom-right" richColors closeButton />
+            </TooltipProvider>
+          </MotionConfig>
         </AuthProvider>
       </body>
     </html>

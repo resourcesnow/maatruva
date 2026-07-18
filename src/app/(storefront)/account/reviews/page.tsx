@@ -14,7 +14,7 @@ export default async function AccountReviewsPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <h2 className="font-heading text-xl font-semibold">Your Reviews</h2>
+      <h2 className="font-heading text-maroon text-xl font-semibold">Your Reviews</h2>
 
       {reviews.length === 0 ? (
         <p className="text-muted-foreground text-sm">You haven&apos;t written any reviews yet.</p>

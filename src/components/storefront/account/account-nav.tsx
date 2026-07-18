@@ -27,8 +27,8 @@ export function AccountNav() {
             key={link.href}
             href={link.href}
             className={cn(
-              "flex shrink-0 items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
-              active ? "bg-muted text-foreground" : "text-muted-foreground hover:bg-muted",
+              "flex min-h-11 shrink-0 items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
+              active ? "bg-gold/10 text-maroon" : "text-maroon/70 hover:bg-cream hover:text-maroon",
             )}
           >
             <Icon className="size-4" /> {link.label}

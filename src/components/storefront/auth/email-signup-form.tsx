@@ -92,7 +92,7 @@ export function EmailSignupForm({ callbackUrl }: { callbackUrl: string }) {
         aria-invalid={!!confirmError}
       />
       {confirmError && <p className="text-destructive text-xs">{confirmError}</p>}
-      <Button type="submit" disabled={pending}>
+      <Button type="submit" variant="brand" disabled={pending}>
         {pending ? "Creating account..." : "Create account"}
       </Button>
     </form>

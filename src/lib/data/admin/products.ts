@@ -51,6 +51,20 @@ export async function getAdminProducts(filters: {
   };
 }
 
+export async function getProductStatusCounts() {
+  await connectDB();
+  const rows = await Product.aggregate<{ _id: string; count: number }>([
+    { $group: { _id: "$status", count: { $sum: 1 } } },
+  ]);
+  const counts = { draft: 0, published: 0, archived: 0 };
+  for (const row of rows) {
+    if (row._id === "draft" || row._id === "published" || row._id === "archived") {
+      counts[row._id] = row.count;
+    }
+  }
+  return counts;
+}
+
 export async function getProductForEdit(id: string) {
   await connectDB();
   const doc = await Product.findById(id).lean();

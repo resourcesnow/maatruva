@@ -103,7 +103,7 @@ export function AddressForm({ address, onSaved }: { address?: Address; onSaved?:
         Set as default
       </label>
       <div className="flex gap-2 sm:col-span-2">
-        <Button type="submit" disabled={pending} className="w-fit">
+        <Button type="submit" variant="brand" disabled={pending} className="w-fit">
           {pending ? "Saving..." : address ? "Save Changes" : "Add Address"}
         </Button>
         {address && (

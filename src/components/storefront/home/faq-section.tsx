@@ -2,6 +2,7 @@
 
 import { useId, useState } from "react";
 import { Plus } from "lucide-react";
+import { Reveal, RevealGroup, RevealItem } from "@/components/motion/reveal";
 
 export type FaqItem = {
   question: string;
@@ -83,34 +84,38 @@ export function FaqSection({ items }: { items: FaqItem[] }) {
 
   return (
     <section className="bg-porcelain w-full pt-4 pb-16 md:pt-6 md:pb-24">
-      <h2 className="text-maroon px-4 text-center font-serif text-3xl font-semibold sm:px-8 md:text-5xl">
-        FAQ&apos;s
-      </h2>
+      <Reveal>
+        <h2 className="text-maroon px-4 text-center font-serif text-3xl font-semibold sm:px-8 md:text-5xl">
+          FAQ&apos;s
+        </h2>
+      </Reveal>
 
-      <div className="mx-auto mt-12 grid max-w-6xl grid-cols-1 gap-6 px-6 md:mt-16 lg:grid-cols-2">
+      <RevealGroup className="mx-auto mt-12 grid max-w-6xl grid-cols-1 gap-6 px-4 sm:px-8 md:mt-16 lg:grid-cols-2">
         <div className="flex flex-col gap-4">
           {left.map(({ item, index }) => (
-            <FaqAccordionItem
-              key={index}
-              item={item}
-              index={index}
-              isOpen={openIndices.has(index)}
-              onToggle={() => toggle(index)}
-            />
+            <RevealItem key={index}>
+              <FaqAccordionItem
+                item={item}
+                index={index}
+                isOpen={openIndices.has(index)}
+                onToggle={() => toggle(index)}
+              />
+            </RevealItem>
           ))}
         </div>
         <div className="flex flex-col gap-4">
           {right.map(({ item, index }) => (
-            <FaqAccordionItem
-              key={index}
-              item={item}
-              index={index}
-              isOpen={openIndices.has(index)}
-              onToggle={() => toggle(index)}
-            />
+            <RevealItem key={index}>
+              <FaqAccordionItem
+                item={item}
+                index={index}
+                isOpen={openIndices.has(index)}
+                onToggle={() => toggle(index)}
+              />
+            </RevealItem>
           ))}
         </div>
-      </div>
+      </RevealGroup>
     </section>
   );
 }

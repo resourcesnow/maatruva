@@ -11,7 +11,7 @@ export default async function AddressesPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <h2 className="font-heading text-xl font-semibold">Addresses</h2>
+      <h2 className="font-heading text-maroon text-xl font-semibold">Addresses</h2>
       <AddressList addresses={addresses} />
       <AddressForm />
     </div>

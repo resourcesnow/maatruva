@@ -14,6 +14,7 @@ export type CategoryWithCount = {
   name: string;
   slug: string;
   count: number;
+  parent: string | null;
 };
 
 export type ColourOption = {

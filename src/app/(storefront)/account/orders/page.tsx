@@ -16,7 +16,7 @@ export default async function OrdersPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <h2 className="font-heading text-xl font-semibold">Orders</h2>
+      <h2 className="font-heading text-maroon text-xl font-semibold">Orders</h2>
 
       {orders.length === 0 ? (
         <p className="text-muted-foreground text-sm">You haven&apos;t placed any orders yet.</p>

@@ -24,6 +24,7 @@ export const roleMatrix = {
   adminsManage: ["super_admin"] as UserRole[],
   auditLogView: ["super_admin", "admin"] as UserRole[],
   leadsManage: ["super_admin", "admin"] as UserRole[],
+  settingsManage: ["super_admin"] as UserRole[],
 };
 
 // Table for middleware (edge-safe: no Node/Mongoose imports). Longest-prefix-match among
@@ -42,6 +43,7 @@ export const adminRoutePermissions: { prefix: string; capability: keyof typeof r
   { prefix: "/admin/reviews", capability: "reviewsModerate" },
   { prefix: "/admin/content", capability: "contentManage" },
   { prefix: "/admin/users", capability: "usersManage" },
+  { prefix: "/admin/settings", capability: "settingsManage" },
 ];
 
 export function getRequiredRolesForPath(pathname: string): UserRole[] | null {

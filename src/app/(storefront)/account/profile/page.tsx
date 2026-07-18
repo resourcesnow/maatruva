@@ -42,7 +42,7 @@ export default async function ProfilePage() {
       {!profile.phone && <ProfileCompletionBanner />}
 
       <div className="flex flex-col gap-6">
-        <h2 className="font-heading text-xl font-semibold">Edit Profile</h2>
+        <h2 className="font-heading text-maroon text-xl font-semibold">Edit Profile</h2>
         <ProfileForm
           name={profile.name}
           email={profile.email ?? ""}
@@ -52,7 +52,7 @@ export default async function ProfilePage() {
       </div>
 
       <div className="flex flex-col gap-6">
-        <h2 className="font-heading text-xl font-semibold">Security</h2>
+        <h2 className="font-heading text-maroon text-xl font-semibold">Security</h2>
         <ChangePasswordCard email={profile.email ?? ""} />
       </div>
     </div>

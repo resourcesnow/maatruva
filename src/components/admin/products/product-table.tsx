@@ -93,7 +93,13 @@ function ProductRow({ product }: { product: Row }) {
       </TableCell>
       <TableCell>
         <Badge
-          variant={product.status === "published" ? "default" : "secondary"}
+          variant={
+            product.status === "published"
+              ? "default"
+              : product.status === "draft"
+                ? "outline"
+                : "secondary"
+          }
           className="capitalize"
         >
           {product.status}
@@ -142,17 +148,37 @@ export function ProductTable({
   searchParams,
   currentField,
   currentDir,
+  activeStatus,
 }: {
   products: Row[];
   basePath: string;
   searchParams: Record<string, string | undefined>;
   currentField: string;
   currentDir: "asc" | "desc";
+  activeStatus?: string;
 }) {
   if (products.length === 0) {
+    const clearParams = new URLSearchParams();
+    Object.entries(searchParams).forEach(([key, value]) => {
+      if (value && key !== "status" && key !== "page") clearParams.set(key, value);
+    });
+    const clearQuery = clearParams.toString();
+
     return (
       <div className="border-border text-muted-foreground rounded-xl border border-dashed p-12 text-center text-sm">
-        No products found.
+        {activeStatus ? (
+          <>
+            No <span className="capitalize">{activeStatus}</span> products found.{" "}
+            <Link
+              href={clearQuery ? `${basePath}?${clearQuery}` : basePath}
+              className="text-foreground underline underline-offset-2"
+            >
+              Clear filter
+            </Link>
+          </>
+        ) : (
+          "No products found."
+        )}
       </div>
     );
   }

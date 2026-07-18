@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { signIn } from "next-auth/react";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import { EmailLoginForm } from "./email-login-form";
 import { EmailSignupForm } from "./email-signup-form";
 
@@ -10,10 +11,10 @@ export function LoginForm({ callbackUrl }: { callbackUrl: string }) {
   const [emailMode, setEmailMode] = useState<"login" | "signup">("login");
 
   return (
-    <div className="mx-auto flex w-full max-w-sm flex-col gap-6">
+    <div className="border-cream-dark shadow-warm mx-auto flex w-full max-w-sm flex-col gap-6 rounded-2xl border bg-white p-6 sm:p-8">
       <Button
         type="button"
-        variant="outline"
+        variant="brand-outline"
         size="lg"
         className="w-full"
         onClick={() => signIn("google", { callbackUrl })}
@@ -21,26 +22,43 @@ export function LoginForm({ callbackUrl }: { callbackUrl: string }) {
         Continue with Google
       </Button>
 
-      <div className="text-muted-foreground flex items-center gap-3 text-xs">
-        <span className="bg-border h-px flex-1" />
+      <div className="text-maroon/40 flex items-center gap-3 text-xs">
+        <span className="bg-cream-dark h-px flex-1" />
         or
-        <span className="bg-border h-px flex-1" />
+        <span className="bg-cream-dark h-px flex-1" />
       </div>
 
-      <div className="flex flex-col gap-4">
-        <div className="flex items-center justify-center gap-1 text-sm">
+      <div className="flex flex-col gap-5">
+        <div
+          role="tablist"
+          aria-label="Login or sign up"
+          className="border-cream-dark flex items-center justify-center gap-1 border-b text-sm"
+        >
           <button
             type="button"
+            role="tab"
+            aria-selected={emailMode === "login"}
             onClick={() => setEmailMode("login")}
-            className={emailMode === "login" ? "font-semibold" : "text-muted-foreground underline"}
+            className={cn(
+              "-mb-px border-b-2 px-3 pb-2 font-medium transition-colors",
+              emailMode === "login"
+                ? "border-gold text-maroon"
+                : "text-maroon/50 hover:text-maroon border-transparent",
+            )}
           >
             Log in
           </button>
-          <span className="text-muted-foreground">/</span>
           <button
             type="button"
+            role="tab"
+            aria-selected={emailMode === "signup"}
             onClick={() => setEmailMode("signup")}
-            className={emailMode === "signup" ? "font-semibold" : "text-muted-foreground underline"}
+            className={cn(
+              "-mb-px border-b-2 px-3 pb-2 font-medium transition-colors",
+              emailMode === "signup"
+                ? "border-gold text-maroon"
+                : "text-maroon/50 hover:text-maroon border-transparent",
+            )}
           >
             Sign up
           </button>

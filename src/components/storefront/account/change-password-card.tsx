@@ -46,7 +46,7 @@ export function ChangePasswordCard({ email }: { email: string }) {
           <p className="text-sm font-medium">Password</p>
           <p className="text-muted-foreground text-sm">Change your account password.</p>
         </div>
-        <Button variant="outline" onClick={handleSendCode} disabled={pending}>
+        <Button variant="brand-outline" onClick={handleSendCode} disabled={pending}>
           {pending ? "Sending..." : "Change password"}
         </Button>
       </div>
@@ -94,7 +94,7 @@ export function ChangePasswordCard({ email }: { email: string }) {
         />
       </div>
       <div className="flex gap-2">
-        <Button type="submit" disabled={formPending}>
+        <Button type="submit" variant="brand" disabled={formPending}>
           {formPending ? "Updating..." : "Update password"}
         </Button>
         <Button type="button" variant="outline" onClick={() => setStep("idle")}>

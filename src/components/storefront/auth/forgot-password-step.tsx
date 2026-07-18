@@ -107,18 +107,22 @@ export function ForgotPasswordStep({ onBack, onDone }: { onBack: () => void; onD
           aria-invalid={!!confirmError}
         />
         {confirmError && <p className="text-destructive text-xs">{confirmError}</p>}
-        <Button type="submit" disabled={pending}>
+        <Button type="submit" variant="brand" disabled={pending}>
           {pending ? "Updating..." : "Update password"}
         </Button>
         <div className="flex items-center justify-between text-sm">
-          <button type="button" onClick={onBack} className="text-muted-foreground underline">
+          <button
+            type="button"
+            onClick={onBack}
+            className="text-maroon/70 hover:text-maroon underline underline-offset-2"
+          >
             Back to login
           </button>
           <button
             type="button"
             onClick={requestCode}
             disabled={cooldown > 0 || pending}
-            className="text-muted-foreground underline disabled:no-underline disabled:opacity-50"
+            className="text-maroon/70 hover:text-maroon underline underline-offset-2 disabled:no-underline disabled:opacity-50"
           >
             {cooldown > 0 ? `Resend code in ${cooldown}s` : "Resend code"}
           </button>
@@ -140,10 +144,14 @@ export function ForgotPasswordStep({ onBack, onDone }: { onBack: () => void; onD
         value={email}
         onChange={(e) => setEmail(e.target.value)}
       />
-      <Button type="submit" disabled={pending}>
+      <Button type="submit" variant="brand" disabled={pending}>
         {pending ? "Sending..." : "Send code"}
       </Button>
-      <button type="button" onClick={onBack} className="text-muted-foreground text-sm underline">
+      <button
+        type="button"
+        onClick={onBack}
+        className="text-maroon/70 hover:text-maroon text-sm underline underline-offset-2"
+      >
         Back to login
       </button>
     </form>

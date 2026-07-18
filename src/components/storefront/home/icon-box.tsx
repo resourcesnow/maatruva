@@ -9,6 +9,7 @@ import {
   Star,
   type LucideIcon,
 } from "lucide-react";
+import { Reveal, RevealGroup, RevealItem } from "@/components/motion/reveal";
 
 const ICONS: Record<string, LucideIcon> = {
   Award,
@@ -60,15 +61,19 @@ export function IconBoxGrid({ items }: { items: IconBoxItem[] }) {
 
   return (
     <section className="bg-porcelain w-full pt-16 pb-4 md:pt-24 md:pb-6">
-      <h2 className="text-maroon px-4 text-center font-serif text-3xl font-semibold sm:px-8 md:text-5xl">
-        Why Choose Us
-      </h2>
+      <Reveal>
+        <h2 className="text-maroon px-4 text-center font-serif text-3xl font-semibold sm:px-8 md:text-5xl">
+          Why Choose Us
+        </h2>
+      </Reveal>
 
-      <div className="mx-auto mt-12 grid max-w-7xl grid-cols-1 gap-6 px-4 sm:grid-cols-2 sm:px-8 md:mt-16 lg:grid-cols-4">
+      <RevealGroup className="mx-auto mt-12 grid max-w-7xl grid-cols-1 gap-6 px-4 sm:grid-cols-2 sm:px-8 md:mt-16 lg:grid-cols-4">
         {items.map((item) => (
-          <IconBox key={item.title} {...item} />
+          <RevealItem key={item.title}>
+            <IconBox {...item} />
+          </RevealItem>
         ))}
-      </div>
+      </RevealGroup>
     </section>
   );
 }

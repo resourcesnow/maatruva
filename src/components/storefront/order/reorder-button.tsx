@@ -26,7 +26,7 @@ export function ReorderButton({ orderId }: { orderId: string }) {
   }
 
   return (
-    <Button variant="outline" size="sm" onClick={handleReorder} disabled={pending}>
+    <Button variant="brand-outline" size="sm" onClick={handleReorder} disabled={pending}>
       {pending ? "Adding..." : "Reorder"}
     </Button>
   );

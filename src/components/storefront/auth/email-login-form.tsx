@@ -81,11 +81,11 @@ export function EmailLoginForm({ callbackUrl }: { callbackUrl: string }) {
       <button
         type="button"
         onClick={() => setForgotPassword(true)}
-        className="text-muted-foreground -mt-1 self-end text-xs underline"
+        className="text-maroon/70 hover:text-maroon -mt-1 self-end text-xs underline underline-offset-2"
       >
         Forgot password?
       </button>
-      <Button type="submit" disabled={pending}>
+      <Button type="submit" variant="brand" disabled={pending}>
         {pending ? "Logging in..." : "Log in"}
       </Button>
     </form>

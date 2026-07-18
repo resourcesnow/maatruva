@@ -54,7 +54,7 @@ export function ProfileForm({
           {role.replace("_", " ")}
         </Badge>
       </div>
-      <Button type="submit" disabled={pending} className="w-fit">
+      <Button type="submit" variant="brand" disabled={pending} className="w-fit">
         {pending ? "Saving..." : "Save Changes"}
       </Button>
     </form>

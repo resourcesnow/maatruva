@@ -70,7 +70,7 @@ export function ProfilePictureUploader({
             onClick={() => open()}
             disabled={pending}
             aria-label="Change profile picture"
-            className="border-background bg-primary text-primary-foreground absolute -right-1 -bottom-1 flex size-6 items-center justify-center rounded-full border-2"
+            className="border-background bg-maroon absolute -right-1 -bottom-1 flex size-6 items-center justify-center rounded-full border-2 text-white"
           >
             <Camera className="size-3" />
           </button>

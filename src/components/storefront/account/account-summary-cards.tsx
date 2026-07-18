@@ -16,33 +16,33 @@ export function AccountSummaryCards({
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
       <Link
         href="/account/orders"
-        className="border-border hover:bg-muted flex flex-col gap-2 rounded-xl border p-4"
+        className="border-cream-dark hover:bg-cream hover:border-gold/40 flex flex-col gap-2 rounded-xl border p-4 transition-colors"
       >
-        <Package className="text-muted-foreground size-5" />
-        <span className="font-semibold">{orderCount}</span>
-        <span className="text-muted-foreground text-sm">Order History</span>
+        <Package className="text-gold size-5" />
+        <span className="text-maroon font-semibold">{orderCount}</span>
+        <span className="text-maroon/60 text-sm">Order History</span>
       </Link>
 
       <Link
         href="/account/reviews"
-        className="border-border hover:bg-muted flex flex-col gap-2 rounded-xl border p-4"
+        className="border-cream-dark hover:bg-cream hover:border-gold/40 flex flex-col gap-2 rounded-xl border p-4 transition-colors"
       >
-        <Star className="text-muted-foreground size-5" />
-        <span className="font-semibold">{reviewCount}</span>
-        <span className="text-muted-foreground text-sm">Your Reviews</span>
+        <Star className="text-gold size-5" />
+        <span className="text-maroon font-semibold">{reviewCount}</span>
+        <span className="text-maroon/60 text-sm">Your Reviews</span>
       </Link>
 
       <Link
         href={latestOrder ? `/order/${latestOrder._id}` : "/account/orders"}
-        className="border-border hover:bg-muted flex flex-col gap-2 rounded-xl border p-4"
+        className="border-cream-dark hover:bg-cream hover:border-gold/40 flex flex-col gap-2 rounded-xl border p-4 transition-colors"
       >
-        <Truck className="text-muted-foreground size-5" />
+        <Truck className="text-gold size-5" />
         {latestOrder ? (
           <OrderStatusBadge status={latestOrder.status} />
         ) : (
-          <span className="font-semibold">–</span>
+          <span className="text-maroon font-semibold">–</span>
         )}
-        <span className="text-muted-foreground text-sm">Track Your Order</span>
+        <span className="text-maroon/60 text-sm">Track Your Order</span>
       </Link>
     </div>
   );

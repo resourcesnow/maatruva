@@ -15,6 +15,7 @@ import {
   Inbox,
   ShieldCheck,
   ScrollText,
+  Settings,
   type LucideIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -53,6 +54,7 @@ const ALL_LINKS: { href: string; label: string; icon: LucideIcon; roles: UserRol
     icon: ScrollText,
     roles: ["super_admin", "admin"],
   },
+  { href: "/admin/settings", label: "Settings", icon: Settings, roles: ["super_admin"] },
 ];
 
 export function AdminNav({ role }: { role: UserRole }) {

@@ -18,6 +18,14 @@ const buttonVariants = cva(
         destructive:
           "bg-destructive/10 text-destructive hover:bg-destructive/20 focus-visible:border-destructive/40 focus-visible:ring-destructive/20 dark:bg-destructive/20 dark:hover:bg-destructive/30 dark:focus-visible:ring-destructive/40",
         link: "text-primary underline-offset-4 hover:underline",
+        // Brand-specific variants (maroon fill / gold accent) — used on the login and account
+        // pages, which want the true brand palette rather than the shadcn `--primary` token
+        // (a slightly different red used for the rest of the app's neutral UI chrome). Additive
+        // only: existing `default`/`outline`/etc. usages elsewhere are untouched.
+        brand:
+          "bg-maroon text-white hover:bg-maroon-dark focus-visible:border-gold focus-visible:ring-gold/50",
+        "brand-outline":
+          "border-gold text-maroon bg-transparent hover:bg-gold/10 focus-visible:border-gold focus-visible:ring-gold/50",
       },
       size: {
         default:

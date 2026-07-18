@@ -50,12 +50,12 @@ export function AddressList({ addresses }: { addresses: Address[] }) {
               <p className="text-muted-foreground text-sm">{address.phone}</p>
             </div>
             <div className="flex gap-2">
-              <Button variant="outline" size="sm" onClick={() => setEditingId(address.id)}>
+              <Button variant="brand-outline" size="sm" onClick={() => setEditingId(address.id)}>
                 Edit
               </Button>
               {!address.isDefault && (
                 <form action={setDefaultAddressAction.bind(null, address.id)}>
-                  <Button type="submit" variant="outline" size="sm">
+                  <Button type="submit" variant="brand-outline" size="sm">
                     Set Default
                   </Button>
                 </form>

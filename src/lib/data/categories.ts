@@ -1,7 +1,7 @@
 import "server-only";
 import { connectDB } from "@/lib/db";
 import { Category } from "@/models/Category";
-import type { CategoryNode } from "@/types/catalog";
+import type { CategoryNode, CategoryWithCount } from "@/types/catalog";
 
 export async function getCategoryTree(): Promise<CategoryNode[]> {
   await connectDB();
@@ -49,9 +49,7 @@ export async function getCategoryBySlug(slug: string) {
   };
 }
 
-export async function getCategoriesWithCounts(): Promise<
-  { id: string; name: string; slug: string; count: number }[]
-> {
+export async function getCategoriesWithCounts(): Promise<CategoryWithCount[]> {
   await connectDB();
   const { Product } = await import("@/models/Product");
 
@@ -91,6 +89,7 @@ export async function getCategoriesWithCounts(): Promise<
     name: doc.name,
     slug: doc.slug,
     count: counts[i],
+    parent: doc.parent ? doc.parent.toString() : null,
   }));
 }
 

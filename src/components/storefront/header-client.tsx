@@ -23,8 +23,8 @@ export function HeaderClient({
   const [searchOpen, setSearchOpen] = useState(false);
 
   return (
-    <header className="bg-maroon text-cream-light sticky top-0 z-40 w-full">
-      <div className="mx-auto grid h-16 max-w-7xl grid-cols-3 items-center px-4 md:h-20 md:px-8">
+    <header className="text-maroon shadow-warm border-gold/25 sticky top-0 z-40 w-full border-b bg-white">
+      <div className="mx-auto grid h-16 max-w-7xl grid-cols-3 items-center px-4 sm:px-6 md:h-20 md:px-8">
         <div className="flex items-center">
           <MobileMenu categories={categories} />
         </div>
@@ -47,7 +47,7 @@ export function HeaderClient({
         ) : (
           <Link
             href="/"
-            className="font-heading justify-self-center text-xl font-semibold tracking-tight md:text-2xl"
+            className="font-heading text-maroon justify-self-center text-xl font-semibold tracking-tight md:text-2xl"
           >
             {brand.name}
           </Link>
@@ -59,13 +59,14 @@ export function HeaderClient({
             size="icon"
             onClick={() => setSearchOpen((v) => !v)}
             aria-label="Toggle search"
+            className="text-maroon hover:bg-cream hover:text-maroon"
           >
             {searchOpen ? <X className="size-5" /> : <SearchIcon className="size-5" />}
           </Button>
           <Button
             variant="ghost"
             size="icon"
-            className="hidden sm:inline-flex"
+            className="text-maroon hover:bg-cream hover:text-maroon hidden sm:inline-flex"
             render={<Link href="/account/wishlist" aria-label="Wishlist" />}
           >
             <Heart className="size-5" />

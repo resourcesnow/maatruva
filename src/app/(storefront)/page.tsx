@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { getHomeContent } from "@/lib/data/home-content";
+import { getSiteSettings } from "@/lib/data/site-settings";
 import { getProducts, getBestsellers } from "@/lib/data/products";
 import { getCategoryTree } from "@/lib/data/categories";
 import { MAX_BESTSELLERS } from "@/lib/zod-schemas/content";
@@ -11,6 +12,7 @@ import { TrendingBestsellers } from "@/components/storefront/home/trending-bests
 import { BrandStatement } from "@/components/storefront/home/brand-statement";
 import { IconBoxGrid } from "@/components/storefront/home/icon-box";
 import { FaqSection } from "@/components/storefront/home/faq-section";
+import { WhatsAppFloat } from "@/components/storefront/home/whatsapp-float";
 import { brand } from "@/lib/brand";
 
 export const dynamic = "force-dynamic";
@@ -39,13 +41,15 @@ export const metadata: Metadata = {
 };
 
 export default async function HomePage() {
-  const [content, bhaiRakhi, bhabhiRakhi, bestsellers, categoryTree] = await Promise.all([
-    getHomeContent(),
-    getProducts({ categorySlug: "bhai-rakhi", perPage: 12 }),
-    getProducts({ categorySlug: "bhabhi-rakhi", perPage: 12 }),
-    getBestsellers(MAX_BESTSELLERS),
-    getCategoryTree(),
-  ]);
+  const [content, siteSettings, bhaiRakhi, bhabhiRakhi, bestsellers, categoryTree] =
+    await Promise.all([
+      getHomeContent(),
+      getSiteSettings(),
+      getProducts({ categorySlug: "bhai-rakhi", perPage: 12 }),
+      getProducts({ categorySlug: "bhabhi-rakhi", perPage: 12 }),
+      getBestsellers(MAX_BESTSELLERS),
+      getCategoryTree(),
+    ]);
 
   const collectionTiles = flattenCategoriesWithImage(categoryTree);
 
@@ -101,6 +105,11 @@ export default async function HomePage() {
       />
       <IconBoxGrid items={content?.whyChooseUs ?? []} />
       <FaqSection items={(content?.faq ?? []).map((f) => ({ question: f.q, answer: f.a }))} />
+      <WhatsAppFloat
+        enabled={siteSettings?.whatsappEnabled ?? false}
+        number={siteSettings?.whatsappNumber ?? ""}
+        message={siteSettings?.whatsappMessage ?? ""}
+      />
     </div>
   );
 }

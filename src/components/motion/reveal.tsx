@@ -1,30 +1,32 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { forwardRef } from "react";
+import { motion, type HTMLMotionProps } from "framer-motion";
 import { fadeInUp, staggerContainer } from "@/lib/motion";
 
-export function Reveal({
-  children,
-  className,
-  delay = 0,
-}: {
-  children: React.ReactNode;
-  className?: string;
+type RevealProps = HTMLMotionProps<"div"> & {
   delay?: number;
-}) {
+};
+
+export const Reveal = forwardRef<HTMLDivElement, RevealProps>(function Reveal(
+  { children, className, delay = 0, transition, ...rest },
+  ref,
+) {
   return (
     <motion.div
+      ref={ref}
       initial="hidden"
       whileInView="visible"
       viewport={{ once: true, margin: "-80px" }}
       variants={fadeInUp}
-      transition={{ delay }}
+      transition={{ delay, ...transition }}
       className={className}
+      {...rest}
     >
       {children}
     </motion.div>
   );
-}
+});
 
 export function RevealGroup({
   children,

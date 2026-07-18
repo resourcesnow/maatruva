@@ -162,6 +162,18 @@
   }
 }
 
+/* Two Tailwind arbitrary-value classes (h-[90vh] h-[90dvh]) don't reliably cascade in class-
+   attribute order — CSS tie-breaking for equal-specificity rules follows stylesheet rule
+   order, not the order classes are listed in the HTML, so which one "wins" would depend on
+   Tailwind's internal generation order rather than being deterministic. A single rule with
+   both declarations is the correct, deterministic way to prefer dvh with a vh fallback: dvh
+   tracks the real visible viewport (excludes a mobile browser's collapsing address bar), vh
+   is what unsupported browsers fall back to. */
+.h-90-dvh {
+  height: 90vh;
+  height: 90dvh;
+}
+
 .range-thumb::-webkit-slider-thumb {
   pointer-events: auto;
   appearance: none;

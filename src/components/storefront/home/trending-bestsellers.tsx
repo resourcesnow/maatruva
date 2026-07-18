@@ -4,6 +4,8 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react
 import Link from "next/link";
 import { SmartImage as Image } from "@/components/ui/smart-image";
 import { animate, motion, useMotionValue, type PanInfo } from "framer-motion";
+import { Reveal } from "@/components/motion/reveal";
+import { CarouselArrow } from "@/components/storefront/home/carousel-arrow";
 
 function getCardsPerView(width: number) {
   if (width >= 1024) return 3;
@@ -68,6 +70,7 @@ export function TrendingBestsellers({
 
   useEffect(() => {
     if (paused || !canLoop) return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     const id = setInterval(() => {
       // Step past the last real card onto the cloned leading cards so the
       // slide keeps moving forward; the animation effect below then snaps
@@ -91,6 +94,16 @@ export function TrendingBestsellers({
     return () => controls.stop();
   }, [index, cardWidth, x, PRODUCT_COUNT]);
 
+  const goPrev = useCallback(() => {
+    setPaused(true);
+    setIndex((i) => Math.max(0, i - 1));
+  }, []);
+
+  const goNext = useCallback(() => {
+    setPaused(true);
+    setIndex((i) => i + 1);
+  }, []);
+
   const handleDragEnd = useCallback(
     (_event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
       const threshold = cardWidth * 0.2;
@@ -112,7 +125,7 @@ export function TrendingBestsellers({
   return (
     <section className="bg-porcelain w-full pt-8 pb-6 md:pt-12 md:pb-8">
       <div className="mx-auto flex max-w-7xl flex-col gap-10 px-4 sm:px-8 lg:flex-row lg:items-center lg:gap-12">
-        <div className="flex shrink-0 flex-col items-start gap-4 lg:w-[30%] lg:justify-center">
+        <Reveal className="flex shrink-0 flex-col items-start gap-4 lg:w-[30%] lg:justify-center">
           <h2 className="text-maroon font-serif text-3xl font-semibold md:text-5xl">{title}</h2>
           <p className="text-maroon/70 font-sans text-base font-light md:text-lg">{subtitle}</p>
           <Link
@@ -121,53 +134,70 @@ export function TrendingBestsellers({
           >
             View All
           </Link>
-        </div>
+        </Reveal>
 
-        <div
-          ref={viewportRef}
-          className="min-w-0 overflow-hidden lg:w-[70%]"
-          onMouseEnter={() => setPaused(true)}
-          onMouseLeave={() => setPaused(false)}
-        >
-          <motion.div
-            className="flex cursor-grab active:cursor-grabbing"
-            style={{ x }}
-            drag={canLoop ? "x" : false}
-            dragConstraints={{ left: -cardWidth * (PRODUCT_COUNT - 1), right: 0 }}
-            dragElastic={0.15}
-            dragMomentum={false}
-            onDragEnd={handleDragEnd}
+        <div className="flex min-w-0 items-center gap-1 sm:gap-3 lg:w-[70%]">
+          {canLoop && (
+            <CarouselArrow
+              direction="prev"
+              onClick={goPrev}
+              disabled={index === 0}
+              label="Previous product"
+            />
+          )}
+
+          {/* Arrow slots are flex siblings, not overlays, so they never sit over the images. */}
+          <Reveal
+            delay={0.08}
+            ref={viewportRef}
+            className="min-w-0 flex-1 overflow-hidden"
+            onMouseEnter={() => setPaused(true)}
+            onMouseLeave={() => setPaused(false)}
+            onTouchStart={() => setPaused(true)}
+            onTouchEnd={() => setPaused(false)}
           >
-            {items.map((product, i) => (
-              <div
-                key={i < PRODUCT_COUNT ? product.name : `clone-${product.name}`}
-                className="shrink-0 px-2 sm:px-3"
-                style={{ width: `${100 / cardsPerView}%` }}
-              >
-                <Link
-                  href={product.href}
-                  className="group bg-cream-light shadow-warm hover:shadow-warm-lg block overflow-hidden rounded-2xl transition-all duration-300 ease-out hover:scale-[1.03]"
+            <motion.div
+              className="flex cursor-grab active:cursor-grabbing"
+              style={{ x }}
+              drag={canLoop ? "x" : false}
+              dragConstraints={{ left: -cardWidth * (PRODUCT_COUNT - 1), right: 0 }}
+              dragElastic={0.15}
+              dragMomentum={false}
+              onDragEnd={handleDragEnd}
+            >
+              {items.map((product, i) => (
+                <div
+                  key={i < PRODUCT_COUNT ? product.name : `clone-${product.name}`}
+                  className="shrink-0 px-2 sm:px-3"
+                  style={{ width: `${100 / cardsPerView}%` }}
                 >
-                  <div className="relative aspect-square w-full overflow-hidden rounded-t-2xl">
-                    <Image
-                      src={product.image}
-                      alt={product.name}
-                      fill
-                      sizes="(min-width: 1024px) 23vw, (min-width: 640px) 35vw, 90vw"
-                      className="object-cover"
-                      draggable={false}
-                    />
-                  </div>
-                  <div className="flex flex-col gap-1 p-4">
-                    <span className="text-maroon truncate font-sans text-sm font-medium md:text-base">
-                      {product.name}
-                    </span>
-                    <span className="text-maroon font-sans text-sm">{product.price}</span>
-                  </div>
-                </Link>
-              </div>
-            ))}
-          </motion.div>
+                  <Link
+                    href={product.href}
+                    className="group bg-cream-light shadow-warm hover:shadow-warm-lg block overflow-hidden rounded-2xl transition-all duration-300 ease-out hover:scale-[1.03]"
+                  >
+                    <div className="relative aspect-square w-full overflow-hidden rounded-t-2xl">
+                      <Image
+                        src={product.image}
+                        alt={product.name}
+                        fill
+                        sizes="(min-width: 1024px) 23vw, (min-width: 640px) 35vw, 90vw"
+                        className="object-cover"
+                        draggable={false}
+                      />
+                    </div>
+                    <div className="flex flex-col gap-1 p-4">
+                      <span className="text-maroon truncate font-sans text-sm font-medium md:text-base">
+                        {product.name}
+                      </span>
+                      <span className="text-maroon font-sans text-sm">{product.price}</span>
+                    </div>
+                  </Link>
+                </div>
+              ))}
+            </motion.div>
+          </Reveal>
+
+          {canLoop && <CarouselArrow direction="next" onClick={goNext} label="Next product" />}
         </div>
       </div>
 

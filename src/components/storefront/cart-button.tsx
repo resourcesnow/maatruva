@@ -14,7 +14,7 @@ export function CartButton() {
     <button
       type="button"
       onClick={() => setCartOpen(true)}
-      className="hover:bg-muted relative flex size-9 items-center justify-center rounded-full"
+      className="text-maroon hover:bg-cream relative flex size-9 items-center justify-center rounded-full"
       aria-label={`Cart, ${count} items`}
     >
       <ShoppingBag className="size-5" />

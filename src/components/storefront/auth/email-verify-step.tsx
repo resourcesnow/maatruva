@@ -93,18 +93,22 @@ export function EmailVerifyStep({
         value={code}
         onChange={(e) => setCode(e.target.value)}
       />
-      <Button type="submit" disabled={pending}>
+      <Button type="submit" variant="brand" disabled={pending}>
         {pending ? "Verifying..." : "Verify & Continue"}
       </Button>
       <div className="flex items-center justify-between text-sm">
-        <button type="button" onClick={onBack} className="text-muted-foreground underline">
+        <button
+          type="button"
+          onClick={onBack}
+          className="text-maroon/70 hover:text-maroon underline underline-offset-2"
+        >
           Back
         </button>
         <button
           type="button"
           onClick={handleResend}
           disabled={cooldown > 0 || pending}
-          className="text-muted-foreground underline disabled:no-underline disabled:opacity-50"
+          className="text-maroon/70 hover:text-maroon underline underline-offset-2 disabled:no-underline disabled:opacity-50"
         >
           {cooldown > 0 ? `Resend code in ${cooldown}s` : "Resend code"}
         </button>

@@ -1,0 +1,102 @@
+"use client";
+
+import Link from "next/link";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
+import { cn } from "@/lib/utils";
+import type { CategoryWithCount } from "@/types/catalog";
+
+type TreeNode = CategoryWithCount & { children: TreeNode[] };
+
+function buildTree(categories: CategoryWithCount[]): TreeNode[] {
+  const nodes = new Map<string, TreeNode>(categories.map((c) => [c.id, { ...c, children: [] }]));
+  const roots: TreeNode[] = [];
+
+  nodes.forEach((node) => {
+    if (node.parent && nodes.has(node.parent)) {
+      nodes.get(node.parent)!.children.push(node);
+    } else {
+      roots.push(node);
+    }
+  });
+
+  return roots;
+}
+
+export function CategoryTreeNav({
+  categories,
+  activeCategorySlug,
+}: {
+  categories: CategoryWithCount[];
+  activeCategorySlug?: string;
+}) {
+  const tree = buildTree(categories);
+  const defaultOpen = tree
+    .filter((node) => node.children.some((child) => child.slug === activeCategorySlug))
+    .map((node) => node.id);
+
+  return (
+    <Accordion className="w-full" defaultValue={defaultOpen}>
+      {tree.map((node) =>
+        node.children.length > 0 ? (
+          <AccordionItem key={node.id} value={node.id} className="border-none">
+            <AccordionTrigger
+              className={cn(
+                "text-maroon hover:bg-cream min-h-10 rounded-md px-2 text-sm font-semibold no-underline hover:no-underline",
+                activeCategorySlug === node.slug && "bg-gold/10",
+              )}
+            >
+              <span className="flex items-center gap-2">
+                <span>{node.name}</span>
+                <span className="text-maroon/50 text-xs font-normal">({node.count})</span>
+              </span>
+            </AccordionTrigger>
+            <AccordionContent className="[&_a]:no-underline [&_a]:hover:no-underline">
+              <ul className="border-cream-dark ml-3 flex flex-col gap-0.5 border-l-2 pl-3">
+                {node.children.map((child) => (
+                  <li key={child.id}>
+                    <Link
+                      href={`/product-category/${child.slug}`}
+                      className={cn(
+                        "flex min-h-10 items-center justify-between gap-2 rounded-md px-2 text-sm transition-colors",
+                        activeCategorySlug === child.slug
+                          ? "text-maroon bg-gold/10 font-semibold"
+                          : "text-maroon/70 hover:bg-cream hover:text-maroon",
+                      )}
+                    >
+                      <span className="flex items-center gap-2">
+                        {activeCategorySlug === child.slug && (
+                          <span className="bg-gold size-1.5 shrink-0 rounded-full" />
+                        )}
+                        {child.name}
+                      </span>
+                      <span className="text-xs opacity-60">({child.count})</span>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </AccordionContent>
+          </AccordionItem>
+        ) : (
+          <Link
+            key={node.id}
+            href={`/product-category/${node.slug}`}
+            className={cn(
+              "flex min-h-10 items-center justify-between gap-2 rounded-md px-2 text-sm font-semibold transition-colors",
+              activeCategorySlug === node.slug
+                ? "text-maroon bg-gold/10"
+                : "text-maroon/80 hover:bg-cream hover:text-maroon",
+            )}
+          >
+            <span>{node.name}</span>
+            <span className="text-xs font-normal opacity-60">({node.count})</span>
+          </Link>
+        ),
+      )}
+    </Accordion>
+  );
+}

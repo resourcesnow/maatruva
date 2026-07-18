@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
@@ -18,7 +19,12 @@ export function UserMenu() {
 
   if (status !== "authenticated") {
     return (
-      <Button variant="ghost" size="icon" render={<Link href="/login" aria-label="Login" />}>
+      <Button
+        variant="ghost"
+        size="icon"
+        className="text-maroon hover:bg-cream hover:text-maroon"
+        render={<Link href="/login" aria-label="Login" />}
+      >
         <User className="size-5" />
       </Button>
     );
@@ -29,15 +35,24 @@ export function UserMenu() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger
-        render={<Button variant="ghost" size="icon" aria-label="Account menu" />}
+        render={
+          <Button
+            variant="ghost"
+            size="icon"
+            aria-label="Account menu"
+            className="text-maroon hover:bg-cream hover:text-maroon"
+          />
+        }
       >
         <User className="size-5" />
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-56">
-        <DropdownMenuLabel>
-          <p className="truncate font-medium">{session.user.name}</p>
-          <p className="text-muted-foreground truncate text-xs">{session.user.email}</p>
-        </DropdownMenuLabel>
+        <DropdownMenuGroup>
+          <DropdownMenuLabel>
+            <p className="truncate font-medium">{session.user.name}</p>
+            <p className="text-muted-foreground truncate text-xs">{session.user.email}</p>
+          </DropdownMenuLabel>
+        </DropdownMenuGroup>
         <DropdownMenuSeparator />
         <DropdownMenuItem render={<Link href="/account/profile" />}>
           <User /> My Profile

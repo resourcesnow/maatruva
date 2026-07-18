@@ -12,7 +12,7 @@ export default async function WishlistPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <h2 className="font-heading text-xl font-semibold">Wishlist</h2>
+      <h2 className="font-heading text-maroon text-xl font-semibold">Wishlist</h2>
       <ProductGrid products={products} />
     </div>
   );
