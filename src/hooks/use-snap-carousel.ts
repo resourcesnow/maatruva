@@ -75,12 +75,16 @@ export function useSnapCarousel({
   const scrollToIndex = useCallback((index: number) => {
     const container = containerRef.current;
     const target = container?.children[index] as HTMLElement | undefined;
+    if (!container || !target) return;
+    // scrollTo on the container itself only moves this element's horizontal scroll — unlike
+    // target.scrollIntoView(), which walks up every scrollable ancestor (including the window's
+    // vertical scroll) to reveal the child, yanking the whole page vertically on each advance
+    // and fighting Lenis's smooth-scroll target on desktop.
+    const left =
+      container.scrollLeft +
+      (target.getBoundingClientRect().left - container.getBoundingClientRect().left);
     const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    target?.scrollIntoView({
-      behavior: reduceMotion ? "auto" : "smooth",
-      inline: "start",
-      block: "nearest",
-    });
+    container.scrollTo({ left, behavior: reduceMotion ? "auto" : "smooth" });
   }, []);
 
   const scrollToPage = useCallback(

@@ -53,7 +53,7 @@ export function Collections({ items }: { items: Collection[] }) {
           <Reveal
             delay={0.08}
             ref={containerRef}
-            className="flex min-w-0 flex-1 snap-x snap-mandatory [scrollbar-width:none] gap-3 overflow-x-auto scroll-smooth lg:gap-6 [&::-webkit-scrollbar]:hidden"
+            className="flex min-w-0 flex-1 snap-x snap-mandatory [scrollbar-width:none] gap-3 overflow-x-auto lg:gap-6 [&::-webkit-scrollbar]:hidden"
             {...pauseHandlers}
           >
             {items.map((item) => (
