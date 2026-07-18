@@ -21,7 +21,7 @@ export function CarouselArrow({
       onClick={onClick}
       disabled={disabled}
       aria-label={label}
-      className="text-maroon hover:text-gold focus-visible:text-gold focus-visible:ring-gold flex shrink-0 items-center justify-center rounded-md p-2 transition-colors focus-visible:ring-1 focus-visible:outline-none disabled:pointer-events-none disabled:opacity-30 sm:p-2.5"
+      className="text-maroon hover:text-gold focus-visible:text-gold focus-visible:ring-gold flex shrink-0 items-center justify-center rounded-md p-2 transition-colors transition-transform duration-150 focus-visible:ring-1 focus-visible:outline-none active:scale-90 disabled:pointer-events-none disabled:opacity-30 sm:p-2.5 pointer-coarse:hidden"
     >
       <Icon className="size-6 sm:size-7" strokeWidth={2.5} />
     </button>

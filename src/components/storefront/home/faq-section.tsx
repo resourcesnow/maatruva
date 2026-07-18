@@ -1,6 +1,7 @@
 "use client";
 
 import { useId, useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
 import { Plus } from "lucide-react";
 import { Reveal, RevealGroup, RevealItem } from "@/components/motion/reveal";
 
@@ -32,7 +33,7 @@ function FaqAccordionItem({
         onClick={onToggle}
         aria-expanded={isOpen}
         aria-controls={panelId}
-        className="flex w-full items-center gap-4 px-5 py-4 text-left"
+        className="flex w-full items-center gap-4 px-5 py-4 text-left transition-transform duration-150 active:scale-[0.99]"
       >
         <span className="bg-gold flex size-7 shrink-0 items-center justify-center rounded-full text-sm font-semibold text-white">
           {index + 1}
@@ -46,20 +47,24 @@ function FaqAccordionItem({
         />
       </button>
 
-      <div
-        id={panelId}
-        role="region"
-        aria-labelledby={buttonId}
-        className={`grid transition-all duration-300 ease-out ${
-          isOpen ? "grid-rows-[1fr]" : "grid-rows-[0fr]"
-        }`}
-      >
-        <div className="overflow-hidden">
-          <p className="text-maroon/80 pr-5 pb-4 pl-16 font-sans text-sm leading-relaxed">
-            {item.answer}
-          </p>
-        </div>
-      </div>
+      <AnimatePresence initial={false}>
+        {isOpen && (
+          <motion.div
+            id={panelId}
+            role="region"
+            aria-labelledby={buttonId}
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
+            className="overflow-hidden"
+          >
+            <p className="text-maroon/80 pr-5 pb-4 pl-16 font-sans text-sm leading-relaxed">
+              {item.answer}
+            </p>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

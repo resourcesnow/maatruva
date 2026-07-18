@@ -9,6 +9,7 @@ import { ProductActions } from "@/components/storefront/product/product-actions"
 import { ReviewForm } from "@/components/storefront/product/review-form";
 import { ReviewList, ReviewSummary } from "@/components/storefront/product/review-list";
 import { ProductGrid } from "@/components/storefront/product-grid";
+import { ShopMoreNav } from "@/components/storefront/product/shop-more-nav";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Truck, RotateCcw } from "lucide-react";
@@ -170,6 +171,13 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
           <ProductGrid products={related} />
         </section>
       )}
+
+      <ShopMoreNav
+        categoryHref={
+          product.categories[0] ? `/product-category/${product.categories[0].slug}` : undefined
+        }
+        categoryLabel={product.categories[0]?.name}
+      />
     </div>
   );
 }

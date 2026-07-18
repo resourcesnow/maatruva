@@ -189,7 +189,7 @@ export function BrandStatement({
               return (
                 <div
                   key={founder.name}
-                  className={`flex flex-col gap-3 ${isRight ? "items-end text-right" : "items-start text-left"}`}
+                  className={`flex flex-col items-center gap-3 text-center ${isRight ? "sm:items-end sm:text-right" : "sm:items-start sm:text-left"}`}
                 >
                   <div className="shadow-warm relative size-14 shrink-0 overflow-hidden rounded-full">
                     {founder.photo && (
@@ -202,7 +202,9 @@ export function BrandStatement({
                       />
                     )}
                   </div>
-                  <div className={`flex flex-col gap-1 ${isRight ? "items-end" : "items-start"}`}>
+                  <div
+                    className={`flex flex-col items-center gap-1 ${isRight ? "sm:items-end" : "sm:items-start"}`}
+                  >
                     <p className="text-maroon font-sans text-sm font-semibold md:text-base">
                       {founder.name}
                     </p>
