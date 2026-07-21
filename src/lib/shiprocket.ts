@@ -3,6 +3,7 @@
 // throws unconditionally in that context. It's never imported by any client component.
 
 import { brand } from "./brand";
+import { connectDB } from "./db";
 
 const BASE_URL = "https://apiv2.shiprocket.in/v1/external";
 const TOKEN_TTL_MS = 9 * 24 * 60 * 60 * 1000; // Shiprocket tokens are valid ~10 days; refresh a day early
@@ -188,6 +189,7 @@ export function computeParcel(items: { category: ParcelCategory; qty: number }[]
 // gets booked with — imports Product/Category lazily to avoid a hard dependency for callers
 // (e.g. scripts/sync-shipment-status.ts) that never need this path.
 export async function getParcelForItems(items: { productId: string; qty: number }[]) {
+  await connectDB();
   const { Product } = await import("@/models/Product");
   await import("@/models/Category");
 
