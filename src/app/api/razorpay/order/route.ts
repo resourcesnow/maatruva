@@ -9,6 +9,7 @@ import { addressSchema } from "@/lib/zod-schemas/address";
 import { validateCouponAction } from "@/lib/actions/coupon";
 import { getShippingRate } from "@/lib/shipping-rate";
 import { ShiprocketConfigError } from "@/lib/shiprocket";
+import { brand } from "@/lib/brand";
 
 const bodySchema = z.object({
   items: z.array(z.object({ productId: z.string(), qty: z.number().int().positive() })).min(1),
@@ -118,15 +119,20 @@ export async function POST(req: Request) {
     user: session?.user?.id ?? null,
     guestEmail: session?.user ? null : guestEmail,
     items: orderItems,
-    shippingAddress: {
-      name: fullName,
-      line1: shippingAddress.line1,
-      line2: shippingAddress.line2,
-      city: shippingAddress.city,
-      state: shippingAddress.state,
-      pincode: shippingAddress.pincode,
-      phone: shippingAddress.phone,
-    },
+    // Pickup orders never collect an address client-side — always the store's own address
+    // here, regardless of what the client sent, never trusting it for this case.
+    shippingAddress:
+      deliveryMethod === "pickup"
+        ? { name: fullName, ...brand.storeAddress }
+        : {
+            name: fullName,
+            line1: shippingAddress.line1,
+            line2: shippingAddress.line2,
+            city: shippingAddress.city,
+            state: shippingAddress.state,
+            pincode: shippingAddress.pincode,
+            phone: shippingAddress.phone,
+          },
     subtotal,
     discount,
     shippingFee,

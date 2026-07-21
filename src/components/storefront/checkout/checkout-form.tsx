@@ -138,19 +138,26 @@ export function CheckoutForm({
       return;
     }
 
-    const shippingAddress = useNewAddress
-      ? { ...form, label: "Shipping" }
-      : selectedAddress
-        ? {
-            label: selectedAddress.label,
-            line1: selectedAddress.line1,
-            line2: selectedAddress.line2,
-            city: selectedAddress.city,
-            state: selectedAddress.state,
-            pincode: selectedAddress.pincode,
-            phone: selectedAddress.phone,
-          }
-        : null;
+    // Pickup orders never collect an address in the UI — the Order document still requires
+    // one at the schema level (used for the "who to hand the order to" record), so this sends
+    // the store's own address. The server independently overrides this with the same value
+    // for pickup orders regardless of what's sent here (never trusts the client for it).
+    const shippingAddress =
+      deliveryMethod === "pickup"
+        ? { label: "Pickup", ...brand.storeAddress }
+        : useNewAddress
+          ? { ...form, label: "Shipping" }
+          : selectedAddress
+            ? {
+                label: selectedAddress.label,
+                line1: selectedAddress.line1,
+                line2: selectedAddress.line2,
+                city: selectedAddress.city,
+                state: selectedAddress.state,
+                pincode: selectedAddress.pincode,
+                phone: selectedAddress.phone,
+              }
+            : null;
 
     if (!shippingAddress || !shippingAddress.line1 || !shippingAddress.pincode) {
       toast.error("Please provide a complete shipping address.");
@@ -195,7 +202,13 @@ export function CheckoutForm({
         name: brand.name,
         description: `Order ${data.orderNo}`,
         order_id: data.razorpayOrderId,
-        prefill: { name: fullName, email: guestEmail || userEmail, contact: shippingAddress.phone },
+        prefill: {
+          name: fullName,
+          email: guestEmail || userEmail,
+          // Never the store's own number (shippingAddress.phone for pickup orders) — that's
+          // not the buyer's contact, so leave it for Razorpay's own checkout to collect.
+          contact: deliveryMethod === "pickup" ? undefined : shippingAddress.phone,
+        },
         theme: { color: "#7a1f2e" },
         handler: async (response) => {
           const verifyRes = await fetch("/api/razorpay/verify", {
@@ -280,79 +293,81 @@ export function CheckoutForm({
           </div>
         </div>
 
-        <div>
-          <h2 className="font-heading mb-3 text-lg font-semibold">Shipping Address</h2>
+        {deliveryMethod === "delivery" && (
+          <div>
+            <h2 className="font-heading mb-3 text-lg font-semibold">Shipping Address</h2>
 
-          {addresses.length > 0 && (
-            <div className="mb-3 flex flex-col gap-2">
-              {addresses.map((addr) => (
-                <label
-                  key={addr.id}
-                  className="border-border has-[:checked]:border-primary flex cursor-pointer items-start gap-2 rounded-lg border p-3 text-sm"
+            {addresses.length > 0 && (
+              <div className="mb-3 flex flex-col gap-2">
+                {addresses.map((addr) => (
+                  <label
+                    key={addr.id}
+                    className="border-border has-checked:border-primary flex cursor-pointer items-start gap-2 rounded-lg border p-3 text-sm"
+                  >
+                    <input
+                      type="radio"
+                      name="address"
+                      checked={!useNewAddress && selectedId === addr.id}
+                      onChange={() => {
+                        setSelectedId(addr.id);
+                        setUseNewAddress(false);
+                      }}
+                      className="mt-1"
+                    />
+                    <span>
+                      <strong>{addr.label}</strong> — {addr.line1}, {addr.city}, {addr.state} -{" "}
+                      {addr.pincode} · {addr.phone}
+                    </span>
+                  </label>
+                ))}
+                <button
+                  type="button"
+                  onClick={() => setUseNewAddress(true)}
+                  className="text-brand-secondary text-left text-sm font-medium underline"
                 >
-                  <input
-                    type="radio"
-                    name="address"
-                    checked={!useNewAddress && selectedId === addr.id}
-                    onChange={() => {
-                      setSelectedId(addr.id);
-                      setUseNewAddress(false);
-                    }}
-                    className="mt-1"
-                  />
-                  <span>
-                    <strong>{addr.label}</strong> — {addr.line1}, {addr.city}, {addr.state} -{" "}
-                    {addr.pincode} · {addr.phone}
-                  </span>
-                </label>
-              ))}
-              <button
-                type="button"
-                onClick={() => setUseNewAddress(true)}
-                className="text-brand-secondary text-left text-sm font-medium underline"
-              >
-                + Use a new address
-              </button>
-            </div>
-          )}
+                  + Use a new address
+                </button>
+              </div>
+            )}
 
-          {useNewAddress && (
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-              <Input
-                placeholder="Address Line 1"
-                className="sm:col-span-2"
-                value={form.line1}
-                onChange={(e) => setForm({ ...form, line1: e.target.value })}
-              />
-              <Input
-                placeholder="Address Line 2 (optional)"
-                className="sm:col-span-2"
-                value={form.line2}
-                onChange={(e) => setForm({ ...form, line2: e.target.value })}
-              />
-              <Input
-                placeholder="City"
-                value={form.city}
-                onChange={(e) => setForm({ ...form, city: e.target.value })}
-              />
-              <Input
-                placeholder="State"
-                value={form.state}
-                onChange={(e) => setForm({ ...form, state: e.target.value })}
-              />
-              <Input
-                placeholder="Pincode"
-                value={form.pincode}
-                onChange={(e) => setForm({ ...form, pincode: e.target.value })}
-              />
-              <Input
-                placeholder="Phone"
-                value={form.phone}
-                onChange={(e) => setForm({ ...form, phone: e.target.value })}
-              />
-            </div>
-          )}
-        </div>
+            {useNewAddress && (
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <Input
+                  placeholder="Address Line 1"
+                  className="sm:col-span-2"
+                  value={form.line1}
+                  onChange={(e) => setForm({ ...form, line1: e.target.value })}
+                />
+                <Input
+                  placeholder="Address Line 2 (optional)"
+                  className="sm:col-span-2"
+                  value={form.line2}
+                  onChange={(e) => setForm({ ...form, line2: e.target.value })}
+                />
+                <Input
+                  placeholder="City"
+                  value={form.city}
+                  onChange={(e) => setForm({ ...form, city: e.target.value })}
+                />
+                <Input
+                  placeholder="State"
+                  value={form.state}
+                  onChange={(e) => setForm({ ...form, state: e.target.value })}
+                />
+                <Input
+                  placeholder="Pincode"
+                  value={form.pincode}
+                  onChange={(e) => setForm({ ...form, pincode: e.target.value })}
+                />
+                <Input
+                  placeholder="Phone"
+                  value={form.phone}
+                  onChange={(e) => setForm({ ...form, phone: e.target.value })}
+                />
+              </div>
+            )}
+          </div>
+        )}
 
         <div>
           <h2 className="font-heading mb-3 text-lg font-semibold">Delivery Method</h2>

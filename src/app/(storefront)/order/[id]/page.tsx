@@ -6,6 +6,7 @@ import { OrderStatusBadge } from "@/components/storefront/order/order-status-bad
 import { OrderTimeline } from "@/components/storefront/order/order-timeline";
 import { SmartImage as Image } from "@/components/ui/smart-image";
 import { formatINR } from "@/lib/format";
+import { brand } from "@/lib/brand";
 
 export const metadata: Metadata = { title: "Order Confirmation" };
 export const dynamic = "force-dynamic";
@@ -83,6 +84,12 @@ export default async function OrderPage({ params }: { params: Promise<{ id: stri
           <div className="border-border text-muted-foreground mt-4 border-t pt-4 text-sm">
             <p className="text-foreground font-medium">Pickup at Store</p>
             <p>Collect this order in person once it&apos;s confirmed. No shipping will occur.</p>
+            <p className="text-foreground mt-3 font-medium">{brand.name} Store</p>
+            <p>{brand.storeAddress.line1}</p>
+            <p>
+              {brand.storeAddress.city}, {brand.storeAddress.state} - {brand.storeAddress.pincode}
+            </p>
+            <p>{brand.storeAddress.phone}</p>
           </div>
         ) : (
           <div className="border-border text-muted-foreground mt-4 border-t pt-4 text-sm">

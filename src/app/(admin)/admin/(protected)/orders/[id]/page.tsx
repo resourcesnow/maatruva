@@ -55,7 +55,14 @@ export default async function AdminOrderDetailPage({
       </div>
 
       <div className="border-border rounded-xl border p-5">
-        <h2 className="font-heading mb-2 text-lg font-semibold">Shipping Address</h2>
+        <h2 className="font-heading mb-2 text-lg font-semibold">
+          {order.deliveryMethod === "pickup" ? "Pickup Location" : "Shipping Address"}
+        </h2>
+        {order.deliveryMethod === "pickup" && (
+          <p className="text-muted-foreground mb-2 text-sm">
+            Customer will collect in person — this is our store address, not theirs.
+          </p>
+        )}
         <p className="text-sm">{order.shippingAddress.name}</p>
         <p className="text-muted-foreground text-sm">
           {order.shippingAddress.line1}
