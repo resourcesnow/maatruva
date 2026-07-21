@@ -7,8 +7,8 @@ import { Order } from "@/models/Order";
 import { getRazorpayClient, RazorpayConfigError } from "@/lib/razorpay";
 import { addressSchema } from "@/lib/zod-schemas/address";
 import { validateCouponAction } from "@/lib/actions/coupon";
-
-const SHIPPING_FEE = 0;
+import { getShippingRate } from "@/lib/shipping-rate";
+import { ShiprocketConfigError } from "@/lib/shiprocket";
 
 const bodySchema = z.object({
   items: z.array(z.object({ productId: z.string(), qty: z.number().int().positive() })).min(1),
@@ -85,7 +85,32 @@ export async function POST(req: Request) {
     }
   }
 
-  const total = Math.max(0, subtotal - discount + SHIPPING_FEE);
+  // Real, authoritative shipping charge — never trust whatever the client showed as a
+  // preview. Pickup orders never ship, so they skip the check entirely.
+  let shippingFee = 0;
+  if (deliveryMethod === "delivery") {
+    try {
+      const rate = await getShippingRate(
+        shippingAddress.pincode,
+        items.map((i) => ({ productId: i.productId, qty: i.qty })),
+      );
+      if (rate.status === "not_serviceable") {
+        return NextResponse.json(
+          { error: "Sorry, we currently can't deliver to this pincode. Try store pickup instead." },
+          { status: 400 },
+        );
+      }
+      shippingFee = rate.rate;
+    } catch (err) {
+      if (err instanceof ShiprocketConfigError) {
+        console.error("[razorpay/order]", err.message);
+        return NextResponse.json({ error: "Shipping is not configured." }, { status: 503 });
+      }
+      throw err;
+    }
+  }
+
+  const total = Math.max(0, subtotal - discount + shippingFee);
   const orderNo = `MTV${Date.now().toString().slice(-8)}`;
 
   const order = await Order.create({
@@ -104,7 +129,7 @@ export async function POST(req: Request) {
     },
     subtotal,
     discount,
-    shippingFee: SHIPPING_FEE,
+    shippingFee,
     total,
     coupon: appliedCoupon,
     payment: { provider: "razorpay", status: "created" },

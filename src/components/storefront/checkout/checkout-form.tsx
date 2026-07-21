@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
@@ -22,6 +22,13 @@ import { formatINR } from "@/lib/format";
 import { brand } from "@/lib/brand";
 
 type DeliveryMethod = "delivery" | "pickup";
+
+type ShippingEstimate =
+  | { status: "loading" }
+  | { status: "ok"; rate: number }
+  | { status: "fallback"; rate: number }
+  | { status: "not_serviceable" }
+  | { status: "error" };
 
 type SavedAddress = {
   id: string;
@@ -77,6 +84,50 @@ export function CheckoutForm({
     [addresses, selectedId],
   );
 
+  const currentPincode = useNewAddress ? form.pincode : (selectedAddress?.pincode ?? "");
+  const [shippingEstimate, setShippingEstimate] = useState<ShippingEstimate | null>(null);
+
+  useEffect(() => {
+    if (deliveryMethod !== "delivery" || !/^\d{6}$/.test(currentPincode)) {
+      setShippingEstimate(null);
+      return;
+    }
+    if (items.length === 0) return;
+
+    setShippingEstimate({ status: "loading" });
+    const controller = new AbortController();
+    const timer = setTimeout(() => {
+      fetch("/api/shipping/estimate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          pincode: currentPincode,
+          items: items.map((i) => ({ productId: i.productId, qty: i.qty })),
+        }),
+        signal: controller.signal,
+      })
+        .then((res) => (res.ok ? res.json() : Promise.reject(new Error("estimate failed"))))
+        .then((data: ShippingEstimate) => setShippingEstimate(data))
+        .catch((err) => {
+          if (err.name !== "AbortError") setShippingEstimate({ status: "error" });
+        });
+    }, 500);
+
+    return () => {
+      clearTimeout(timer);
+      controller.abort();
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [deliveryMethod, currentPincode, items.length]);
+
+  const shippingRate =
+    shippingEstimate?.status === "ok" || shippingEstimate?.status === "fallback"
+      ? shippingEstimate.rate
+      : 0;
+  const estimatedTotal = subtotal + shippingRate;
+  const notServiceable =
+    deliveryMethod === "delivery" && shippingEstimate?.status === "not_serviceable";
+
   async function handlePlaceOrder() {
     if (!isLoggedIn && !guestEmail) {
       toast.error("Enter your email to continue.");
@@ -103,6 +154,11 @@ export function CheckoutForm({
 
     if (!shippingAddress || !shippingAddress.line1 || !shippingAddress.pincode) {
       toast.error("Please provide a complete shipping address.");
+      return;
+    }
+
+    if (notServiceable) {
+      toast.error("We can't deliver to this pincode. Try store pickup instead.");
       return;
     }
 
@@ -381,14 +437,59 @@ export function CheckoutForm({
             </li>
           ))}
         </ul>
-        <div className="border-border flex justify-between border-t pt-3 font-semibold">
-          <span>Subtotal</span>
+        <div className="border-border flex justify-between border-t pt-3">
+          <span className="text-muted-foreground">Subtotal</span>
           <span>{formatINR(subtotal)}</span>
         </div>
+
+        {deliveryMethod === "pickup" && (
+          <div className="flex justify-between text-sm">
+            <span className="text-muted-foreground">Shipping</span>
+            <span>Free (store pickup)</span>
+          </div>
+        )}
+
+        {deliveryMethod === "delivery" && shippingEstimate?.status === "loading" && (
+          <p className="text-muted-foreground text-xs">Calculating shipping…</p>
+        )}
+        {deliveryMethod === "delivery" && shippingEstimate?.status === "ok" && (
+          <div className="flex justify-between text-sm">
+            <span className="text-muted-foreground">Shipping</span>
+            <span>{formatINR(shippingEstimate.rate)}</span>
+          </div>
+        )}
+        {deliveryMethod === "delivery" && shippingEstimate?.status === "fallback" && (
+          <div className="flex justify-between text-sm">
+            <span className="text-muted-foreground">Shipping (estimated)</span>
+            <span>{formatINR(shippingEstimate.rate)}</span>
+          </div>
+        )}
+        {deliveryMethod === "delivery" && shippingEstimate?.status === "error" && (
+          <p className="text-muted-foreground text-xs">
+            Couldn&apos;t calculate shipping — it will be confirmed at payment.
+          </p>
+        )}
+        {notServiceable && (
+          <p className="text-destructive text-sm font-medium">
+            Sorry, we can&apos;t currently deliver to this pincode. Try store pickup instead.
+          </p>
+        )}
+        {deliveryMethod === "delivery" && !shippingEstimate && (
+          <p className="text-muted-foreground text-xs">Enter your pincode to see shipping cost.</p>
+        )}
+
+        <div className="border-border flex justify-between border-t pt-3 font-semibold">
+          <span>Total</span>
+          <span>{formatINR(estimatedTotal)}</span>
+        </div>
         <p className="text-muted-foreground text-xs">
-          Coupon discount and shipping are calculated at payment.
+          Coupon discount, if any, is applied at payment.
         </p>
-        <Button size="lg" disabled={submitting || items.length === 0} onClick={handlePlaceOrder}>
+        <Button
+          size="lg"
+          disabled={submitting || items.length === 0 || notServiceable}
+          onClick={handlePlaceOrder}
+        >
           {submitting ? "Processing..." : "Pay Now"}
         </Button>
       </div>

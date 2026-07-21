@@ -2,6 +2,8 @@
 // scripts/sync-shipment-status.ts script (via tsx, outside Next's bundler), and "server-only"
 // throws unconditionally in that context. It's never imported by any client component.
 
+import { brand } from "./brand";
+
 const BASE_URL = "https://apiv2.shiprocket.in/v1/external";
 const TOKEN_TTL_MS = 9 * 24 * 60 * 60 * 1000; // Shiprocket tokens are valid ~10 days; refresh a day early
 
@@ -181,6 +183,33 @@ export function computeParcel(items: { category: ParcelCategory; qty: number }[]
   return { weightKg, lengthCm, breadthCm, heightCm };
 }
 
+// Shared by both the pre-payment shipping-rate estimate and the post-payment real shipment
+// creation, so the weight used to quote a rate is always the same weight the actual shipment
+// gets booked with — imports Product/Category lazily to avoid a hard dependency for callers
+// (e.g. scripts/sync-shipment-status.ts) that never need this path.
+export async function getParcelForItems(items: { productId: string; qty: number }[]) {
+  const { Product } = await import("@/models/Product");
+  await import("@/models/Category");
+
+  const products = await Product.find({ _id: { $in: items.map((i) => i.productId) } })
+    .populate("categories", "name slug")
+    .lean();
+  const productById = new Map(
+    products.map((p) => [
+      p._id.toString(),
+      p as unknown as { categories: { name: string; slug: string }[] },
+    ]),
+  );
+
+  return computeParcel(
+    items.map((item) => {
+      const product = productById.get(item.productId);
+      const categoryLabel = product?.categories?.[0]?.slug ?? product?.categories?.[0]?.name ?? "";
+      return { category: classifyParcelCategory(categoryLabel), qty: item.qty };
+    }),
+  );
+}
+
 export type ShiprocketOrderInput = {
   orderNo: string;
   orderDate: Date;
@@ -293,6 +322,58 @@ export async function cancelShiprocketOrder(shiprocketOrderIds: string[]) {
     method: "POST",
     body: { ids: shiprocketOrderIds.map(Number) },
   });
+}
+
+export type ServiceabilityResult =
+  { serviceable: true; rate: number; courierName?: string; etd?: string } | { serviceable: false };
+
+// Checks whether Shiprocket has a courier that can deliver `weightKg` from our pickup pincode
+// to `deliveryPincode`, and what it costs. Always quotes a Prepaid (cod=0) rate — every order
+// on this site is Razorpay-prepaid, there's no COD flow. Picks Shiprocket's own recommended
+// courier when present, otherwise the cheapest available one.
+export async function checkShiprocketServiceability(
+  deliveryPincode: string,
+  weightKg: number,
+): Promise<ServiceabilityResult> {
+  // Reuses the same store pincode already defined in brand.ts rather than a separate env var —
+  // it's the same physical address as the SHIPROCKET_PICKUP_LOCATION pickup point registered
+  // in Shiprocket's dashboard, just expressed as a raw pincode, which is what the
+  // serviceability API needs instead of the named pickup location.
+  const pickupPincode = brand.storeAddress.pincode;
+
+  const params = new URLSearchParams({
+    pickup_postcode: pickupPincode,
+    delivery_postcode: deliveryPincode,
+    weight: weightKg.toFixed(2),
+    cod: "0",
+  });
+
+  const data = await shiprocketRequest<{
+    data?: {
+      available_courier_companies?: {
+        courier_company_id: number;
+        rate: number;
+        courier_name: string;
+        etd?: string;
+      }[];
+      recommended_courier_company_id?: number;
+    };
+  }>(`/courier/serviceability/?${params.toString()}`);
+
+  const couriers = data.data?.available_courier_companies ?? [];
+  if (couriers.length === 0) return { serviceable: false };
+
+  const recommendedId = data.data?.recommended_courier_company_id;
+  const chosen =
+    couriers.find((c) => c.courier_company_id === recommendedId) ??
+    couriers.reduce((cheapest, c) => (c.rate < cheapest.rate ? c : cheapest));
+
+  return {
+    serviceable: true,
+    rate: Math.ceil(chosen.rate),
+    courierName: chosen.courier_name,
+    etd: chosen.etd,
+  };
 }
 
 export async function getShiprocketTracking(shipmentId: string) {
