@@ -3,6 +3,7 @@
 import type { OrderDoc } from "@/models/Order";
 import type { HydratedDocument } from "mongoose";
 import type { OrderStatus } from "@/types/order";
+import { connectDB } from "@/lib/db";
 import { notifyOrderShipped, notifyOrderDelivered } from "@/lib/order-notifications";
 
 // Shiprocket's shipment status strings, mapped to our order status enum. Shared by the webhook
@@ -29,6 +30,11 @@ export async function applyShiprocketStatusUpdate(
     estimatedDelivery?: Date;
   },
 ) {
+  // Every current caller (the webhook route, refreshShipmentTrackingAction,
+  // sync-shipment-status.ts) already connects before calling this — defensive only, see
+  // resolveOrderRecipientEmail in order-notifications.ts for why this is worth keeping anyway.
+  await connectDB();
+
   const mappedStatus = update.currentStatus
     ? SHIPROCKET_STATUS_MAP[update.currentStatus.toLowerCase()]
     : undefined;

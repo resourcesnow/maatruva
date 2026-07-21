@@ -2,6 +2,7 @@
 // Next's bundler). Never imported by a client component.
 import type { OrderDoc } from "@/models/Order";
 import type { HydratedDocument } from "mongoose";
+import { connectDB } from "@/lib/db";
 import { User } from "@/models/User";
 import {
   sendOrderConfirmationEmail,
@@ -13,8 +14,13 @@ import {
 
 type OrderLike = HydratedDocument<OrderDoc>;
 
+// Every current caller already holds a connection by the time it gets here (markOrderPaid,
+// applyShiprocketStatusUpdate, etc. all call connectDB() themselves first) — this call is
+// defensive, not load-bearing, so a future caller that forgets to connect first doesn't
+// silently buffer-timeout the way getParcelForItems() once did.
 export async function resolveOrderRecipientEmail(order: OrderLike): Promise<string | null> {
   if (order.user) {
+    await connectDB();
     const user = await User.findById(order.user).select("email").lean();
     return user?.email ?? null;
   }
