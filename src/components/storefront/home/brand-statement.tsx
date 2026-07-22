@@ -33,38 +33,44 @@ export function BrandStatement({
 
     gsap.registerPlugin(ScrollTrigger);
 
+    let cleanupParallax: (() => void) | undefined;
+
     const ctx = gsap.context(() => {
       // One-time reveal as the section scrolls into view — no pin, no scrub,
       // so the section is a normal, permanently-visible part of the page.
-      gsap.fromTo(
-        [imageWrapRef.current, textRef.current],
-        { y: 16, opacity: 0 },
-        {
-          y: 0,
-          opacity: 1,
-          duration: 0.35,
-          ease: "power2.out",
-          stagger: 0.08,
-          scrollTrigger: {
-            trigger: sectionRef.current,
-            start: "top 80%",
-            toggleActions: "play none none none",
-          },
-        },
+      // imageWrapRef only mounts when an image is set, so it may be null here — GSAP throws on a
+      // raw null target instead of skipping it, so filter before handing off the array.
+      const revealTargets = [imageWrapRef.current, textRef.current].filter(
+        (el): el is HTMLDivElement => el !== null,
       );
+      if (revealTargets.length > 0) {
+        gsap.fromTo(
+          revealTargets,
+          { y: 16, opacity: 0 },
+          {
+            y: 0,
+            opacity: 1,
+            duration: 0.35,
+            ease: "power2.out",
+            stagger: 0.08,
+            scrollTrigger: {
+              trigger: sectionRef.current,
+              start: "top 80%",
+              toggleActions: "play none none none",
+            },
+          },
+        );
+      }
 
-      const mm = gsap.matchMedia();
-
-      mm.add("(min-width: 640px)", () => {
-        const section = sectionRef.current;
-        const cluster = clusterRef.current;
-        if (!section || !cluster) return;
-
-        // Cursor-driven parallax: each word rests at its own corner and is
-        // pulled toward the center image the closer the cursor gets to the
-        // section's center, easing back out to rest on mouseleave.
-        // Directions are measured once, before any transform is applied, so
-        // the live x/y offset from quickTo never feeds back into them.
+      // Cursor-driven parallax runs at every screen size (same as desktop) — it's inert on
+      // touch devices anyway since they never fire mousemove, so no need to gate it by width.
+      const section = sectionRef.current;
+      const cluster = clusterRef.current;
+      if (section && cluster) {
+        // Each word rests at its own corner and is pulled toward the center image the closer
+        // the cursor gets to the section's center, easing back out to rest on mouseleave.
+        // Directions are measured once, before any transform is applied, so the live x/y
+        // offset from quickTo never feeds back into them.
         const MAX_PULL = 32;
         const clusterRectAtRest = cluster.getBoundingClientRect();
         const centerX = clusterRectAtRest.left + clusterRectAtRest.width / 2;
@@ -84,8 +90,8 @@ export function BrandStatement({
           };
         });
 
-        function handlePointerMove(e: MouseEvent) {
-          const sectionRect = section!.getBoundingClientRect();
+        const handlePointerMove = (e: MouseEvent) => {
+          const sectionRect = section.getBoundingClientRect();
           const px = (e.clientX - sectionRect.left) / sectionRect.width;
           const py = (e.clientY - sectionRect.top) / sectionRect.height;
           const dist = Math.hypot(px - 0.5, py - 0.5);
@@ -96,29 +102,32 @@ export function BrandStatement({
             word.setX(word.dirX * MAX_PULL * proximity);
             word.setY(word.dirY * MAX_PULL * proximity);
           });
-        }
+        };
 
-        function handlePointerLeave() {
+        const handlePointerLeave = () => {
           wordStates.forEach((word) => {
             word?.setX(0);
             word?.setY(0);
           });
-        }
+        };
 
         section.addEventListener("mousemove", handlePointerMove);
         section.addEventListener("mouseleave", handlePointerLeave);
 
-        return () => {
+        cleanupParallax = () => {
           section.removeEventListener("mousemove", handlePointerMove);
           section.removeEventListener("mouseleave", handlePointerLeave);
         };
-      });
+      }
     }, sectionRef);
 
-    return () => ctx.revert();
+    return () => {
+      cleanupParallax?.();
+      ctx.revert();
+    };
   }, []);
 
-  if (!image || founders.length === 0) return null;
+  if (founders.length === 0) return null;
 
   return (
     <section ref={sectionRef} className="bg-cream w-full pt-4 pb-20 md:pt-6 md:pb-28">
@@ -127,25 +136,45 @@ export function BrandStatement({
       </h2>
 
       <div className="mx-auto mt-10 flex max-w-7xl flex-col items-center gap-12 px-4 sm:mt-12 sm:px-8 md:mt-16">
-        {/* Words layered over the image, sm and up. */}
+        {/* Same cluster layout at every breakpoint — words absolutely positioned around a
+            centered image — just scaled down proportionally on narrow screens instead of
+            swapping to a different layout. */}
         <div
           ref={clusterRef}
-          className="relative hidden w-full max-w-5xl items-center justify-center sm:flex"
-          style={{ minHeight: "min(58vh, 560px)" }}
+          className="relative flex min-h-56 w-full max-w-5xl items-center justify-center sm:min-h-80 md:min-h-[min(58vh,560px)]"
         >
           <span
             ref={(el) => {
               wordRefs.current[0] = el;
             }}
-            className="text-maroon/50 absolute top-[8%] left-[2%] z-20 font-serif text-5xl md:text-7xl"
+            className="text-maroon/50 absolute top-[8%] left-[2%] z-20 font-serif text-2xl sm:text-4xl md:text-5xl lg:text-7xl"
           >
             {words[0]}
           </span>
+
+          {image && (
+            // A modest, roughly-square box rather than a tall fixed 900:1100 box — a small
+            // logo-shaped upload no longer gets lost in a sea of empty space, while a proper
+            // photo still displays at a reasonable, clearly-visible size via object-contain.
+            <div
+              ref={imageWrapRef}
+              className="bg-cream relative z-10 aspect-square w-28 sm:w-44 md:w-72 md:max-w-[36vw]"
+            >
+              <Image
+                src={image}
+                alt=""
+                fill
+                sizes="(min-width: 768px) 36vw, (min-width: 640px) 176px, 112px"
+                className="object-contain"
+              />
+            </div>
+          )}
+
           <span
             ref={(el) => {
               wordRefs.current[1] = el;
             }}
-            className="text-gold/70 absolute top-[46%] right-0 z-20 font-serif text-5xl md:text-7xl"
+            className="text-gold/70 absolute top-[46%] right-0 z-20 font-serif text-2xl sm:text-4xl md:text-5xl lg:text-7xl"
           >
             {words[1]}
           </span>
@@ -153,33 +182,10 @@ export function BrandStatement({
             ref={(el) => {
               wordRefs.current[2] = el;
             }}
-            className="text-maroon/50 absolute bottom-[6%] left-[8%] z-20 font-serif text-5xl md:text-7xl"
+            className="text-maroon/50 absolute bottom-[6%] left-[8%] z-20 font-serif text-2xl sm:text-4xl md:text-5xl lg:text-7xl"
           >
             {words[2]}
           </span>
-
-          <div
-            ref={imageWrapRef}
-            className="bg-cream relative z-10 aspect-900/1100 h-[58vh] max-h-140"
-          >
-            <Image
-              src={image}
-              alt=""
-              fill
-              sizes="(min-width: 1024px) 40vw, 80vw"
-              className="object-contain"
-            />
-          </div>
-        </div>
-
-        {/* Mobile: simple stack. */}
-        <div className="flex w-full flex-col items-center gap-4 sm:hidden">
-          <span className="text-maroon/50 font-serif text-4xl">{words[0]}</span>
-          <div className="bg-cream relative aspect-900/1100 w-56">
-            <Image src={image} alt="" fill sizes="224px" className="object-contain" />
-          </div>
-          <span className="text-gold/70 font-serif text-4xl">{words[1]}</span>
-          <span className="text-maroon/50 font-serif text-4xl">{words[2]}</span>
         </div>
 
         <div ref={textRef} className="flex w-full flex-col items-center gap-10">

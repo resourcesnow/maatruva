@@ -46,6 +46,11 @@ export const brandStatementSchema = z.object({
   words: z.array(z.string()).default([]),
 });
 
+export const headerLogoSchema = z.object({
+  image: z.string().optional().default(""),
+  publicId: z.string().optional().default(""),
+});
+
 export const MAX_BESTSELLERS = 24;
 
 export const bestsellersSectionSchema = z.object({
@@ -62,6 +67,7 @@ export const homeContentSchema = z.object({
   whyChooseUs: z.array(whyChooseUsSchema).default([]),
   faq: z.array(faqSchema).default([]),
   brandStatement: brandStatementSchema.optional().default({ image: "", publicId: "", words: [] }),
+  headerLogo: headerLogoSchema.optional().default({ image: "", publicId: "" }),
   bestsellersSection: bestsellersSectionSchema.optional().default({
     enabled: true,
     title: "Trending Bestsellers",

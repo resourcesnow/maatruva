@@ -9,7 +9,7 @@ export const brand = {
   },
   storeAddress: {
     line1:
-      "Ashapuri Rakhi by Mamtaben, opposite B.S.N.L office, behind Navyug College Road, Tirupati Society, Nahar Colony, Narotam Nagar",
+      "Maatruva (Ashapuri Rakhi by Mamtaben): 21, Tirupati Society behind Navyug College, Rander Road, Adajan",
     city: "Surat",
     state: "Gujarat",
     pincode: "395009",

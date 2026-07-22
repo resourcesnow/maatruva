@@ -1,6 +1,6 @@
 import Link from "next/link";
 import type { Metadata } from "next";
-import { Plus } from "lucide-react";
+import { Plus, Upload } from "lucide-react";
 import { getAdminProducts, getProductStatusCounts } from "@/lib/data/admin/products";
 import { ProductTable } from "@/components/admin/products/product-table";
 import { ProductStatusFilter } from "@/components/admin/products/product-status-filter";
@@ -36,9 +36,14 @@ export default async function AdminProductsPage({
     <div className="flex flex-col gap-6">
       <div className="flex items-center justify-between">
         <h1 className="font-heading text-2xl font-semibold">Products</h1>
-        <Button render={<Link href="/admin/products/new" />}>
-          <Plus className="size-4" /> Add Product
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button render={<Link href="/admin/products/upload" />}>
+            <Upload className="size-4" /> Upload File
+          </Button>
+          <Button render={<Link href="/admin/products/new" />}>
+            <Plus className="size-4" /> Add Product
+          </Button>
+        </div>
       </div>
 
       <div className="flex flex-wrap items-center gap-3">

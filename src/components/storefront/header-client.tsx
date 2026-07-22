@@ -33,15 +33,15 @@ export function HeaderClient({
           <Link
             href="/"
             aria-label={brand.name}
-            className="relative h-12 w-32 justify-self-center sm:w-36 md:h-16 md:w-44"
+            className="relative h-[60px] w-40 justify-self-center overflow-hidden sm:w-48 md:h-[76px] md:w-64"
           >
             <SmartImage
               src={logoImage}
               alt={brand.name}
               fill
-              sizes="176px"
+              sizes="256px"
               priority
-              className="object-contain"
+              className="scale-125 object-contain"
             />
           </Link>
         ) : (

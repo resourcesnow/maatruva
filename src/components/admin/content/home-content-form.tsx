@@ -42,6 +42,7 @@ type Founder = {
 type WhyItem = { icon: string; title: string; text: string };
 type Faq = { q: string; a: string };
 type BrandStatement = { image: string; publicId: string; words: string[] };
+type HeaderLogo = { image: string; publicId: string };
 type BestsellersSection = { enabled: boolean; title: string; subtitle: string; limit: number };
 
 type HomeContentValue = {
@@ -51,6 +52,7 @@ type HomeContentValue = {
   whyChooseUs: WhyItem[];
   faq: Faq[];
   brandStatement: BrandStatement;
+  headerLogo: HeaderLogo;
   bestsellersSection: BestsellersSection;
 };
 
@@ -99,6 +101,35 @@ export function HomeContentForm({ initial }: { initial: HomeContentValue }) {
         </Link>
         .
       </p>
+
+      <Section title="Header Logo">
+        <p className="text-muted-foreground text-sm">
+          Shown in the site header, top center. This is a separate image from the &ldquo;Brand
+          Statement&rdquo; photo below — upload a small logo mark here, not a large lifestyle photo.
+        </p>
+        <ImageUploader
+          images={
+            value.headerLogo.image
+              ? [
+                  {
+                    url: value.headerLogo.image,
+                    publicId: value.headerLogo.publicId,
+                    alt: "",
+                    order: 0,
+                  },
+                ]
+              : []
+          }
+          onChange={(imgs) => {
+            update("headerLogo", {
+              image: imgs[0]?.url ?? "",
+              publicId: imgs[0]?.publicId ?? "",
+            });
+          }}
+          folder={cloudinaryFolders.headerLogo}
+          maxFiles={1}
+        />
+      </Section>
 
       <Section title="Hero Slides">
         {value.heroSlides.map((slide, i) => (
@@ -430,8 +461,10 @@ export function HomeContentForm({ initial }: { initial: HomeContentValue }) {
 
       <Section title="Brand Statement (Our Message hero image + words)">
         <p className="text-muted-foreground text-sm">
-          The founder bios shown alongside this image come from the first 2 entries in
-          &ldquo;Founders / Our Message&rdquo; above.
+          This is the large photo shown in the &ldquo;Our Message&rdquo; section on the homepage
+          &mdash; a different image from the small &ldquo;Header Logo&rdquo; above. The founder bios
+          shown alongside it come from the first 2 entries in &ldquo;Founders / Our Message&rdquo;
+          above.
         </p>
         <ImageUploader
           images={

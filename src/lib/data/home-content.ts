@@ -36,6 +36,7 @@ export async function getHomeContent() {
     whyChooseUs: { icon: string; title: string; text?: string }[];
     faq: { q: string; a: string }[];
     brandStatement?: { image?: string; publicId?: string; words?: string[] };
+    headerLogo?: { image?: string; publicId?: string };
     bestsellersSection?: { enabled: boolean; title: string; subtitle: string; limit: number };
     meta?: { title?: string; description?: string };
   };

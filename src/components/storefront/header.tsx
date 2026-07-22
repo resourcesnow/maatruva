@@ -4,5 +4,5 @@ import { HeaderClient } from "./header-client";
 
 export async function Header() {
   const [categories, content] = await Promise.all([getCategoryTree(), getHomeContent()]);
-  return <HeaderClient categories={categories} logoImage={content?.brandStatement?.image ?? ""} />;
+  return <HeaderClient categories={categories} logoImage={content?.headerLogo?.image ?? ""} />;
 }

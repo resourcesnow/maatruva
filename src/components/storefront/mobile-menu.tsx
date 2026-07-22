@@ -50,6 +50,17 @@ export function MobileMenu({ categories }: { categories: CategoryNode[] }) {
           <SheetTitle className="font-heading text-maroon text-lg">{brand.name}</SheetTitle>
         </SheetHeader>
         <nav className="flex flex-col gap-0.5 overflow-y-auto px-2 pb-4">
+          <Link
+            href="/"
+            onClick={() => setMobileMenuOpen(false)}
+            className={cn(
+              "border-border text-maroon flex min-h-11 items-center gap-2 border-b px-2 text-base font-semibold",
+              pathname === "/" ? "bg-gold/10" : "hover:bg-cream",
+            )}
+          >
+            {pathname === "/" && <span className="bg-gold size-1.5 shrink-0 rounded-full" />}
+            Home
+          </Link>
           {categories.length > 0 ? (
             <Accordion className="w-full" defaultValue={defaultOpen}>
               {categories.map((category) => {

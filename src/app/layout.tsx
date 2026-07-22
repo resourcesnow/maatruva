@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { MotionConfig } from "framer-motion";
 import { Playfair_Display, Inter } from "next/font/google";
 import { Toaster } from "@/components/ui/sonner";
@@ -28,6 +28,15 @@ export const metadata: Metadata = {
   },
   description: brand.tagline,
   metadataBase: new URL(brand.siteUrl),
+};
+
+// Without this, mobile browsers render the page at a wide desktop-like layout viewport (often
+// ~980px) and zoom out to fit the screen — every Tailwind sm:/md: breakpoint would then evaluate
+// against that virtual width instead of the device's real width, making mobile always render the
+// desktop/tablet styles, badly zoomed out.
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
 };
 
 export default async function RootLayout({

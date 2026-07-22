@@ -67,6 +67,10 @@ const homeContentSchema = new Schema(
       publicId: { type: String },
       words: { type: [String], default: [] },
     },
+    headerLogo: {
+      image: { type: String },
+      publicId: { type: String },
+    },
     bestsellersSection: {
       enabled: { type: Boolean, default: true },
       title: { type: String, default: "Trending Bestsellers" },
