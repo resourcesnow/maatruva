@@ -18,7 +18,7 @@ export function useSnapCarousel({
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [itemsPerView, setItemsPerView] = useState(1);
-  const [page, setPage] = useState(0);
+  const [index, setIndex] = useState(0);
   const [paused, setPaused] = useState(false);
 
   const measureStep = useCallback(() => {
@@ -49,6 +49,9 @@ export function useSnapCarousel({
   }, [measureStep]);
 
   const pageCount = Math.max(1, Math.ceil(itemCount / itemsPerView));
+  // Dots represent whole pages (groups of itemsPerView), but prev/next/autoplay advance one card
+  // at a time — the page indicator is just derived from whichever page the leading item is in.
+  const page = Math.floor(index / itemsPerView);
 
   useEffect(() => {
     const container = containerRef.current;
@@ -60,8 +63,7 @@ export function useSnapCarousel({
       raf = requestAnimationFrame(() => {
         const step = measureStep();
         if (step <= 0) return;
-        const index = Math.round(container!.scrollLeft / step);
-        setPage(Math.floor(index / itemsPerView));
+        setIndex(Math.round(container!.scrollLeft / step));
       });
     }
 
@@ -70,11 +72,11 @@ export function useSnapCarousel({
       container.removeEventListener("scroll", onScroll);
       cancelAnimationFrame(raf);
     };
-  }, [itemsPerView, measureStep]);
+  }, [measureStep]);
 
-  const scrollToIndex = useCallback((index: number) => {
+  const scrollToIndex = useCallback((targetIndex: number) => {
     const container = containerRef.current;
-    const target = container?.children[index] as HTMLElement | undefined;
+    const target = container?.children[targetIndex] as HTMLElement | undefined;
     if (!container || !target) return;
     // scrollTo on the container itself only moves this element's horizontal scroll — unlike
     // target.scrollIntoView(), which walks up every scrollable ancestor (including the window's
@@ -87,6 +89,9 @@ export function useSnapCarousel({
     container.scrollTo({ left, behavior: reduceMotion ? "auto" : "smooth" });
   }, []);
 
+  // Dot clicks still jump a whole page at a time (a bigger, deliberate jump), but prev/next and
+  // autoplay step by a single card — only one card changes per advance, matching the Bhai Rakhi
+  // rail, instead of the whole visible set jumping to an entirely different set at once.
   const scrollToPage = useCallback(
     (targetPage: number) => {
       const clamped = Math.max(0, Math.min(pageCount - 1, targetPage));
@@ -95,28 +100,31 @@ export function useSnapCarousel({
     [pageCount, itemsPerView, scrollToIndex],
   );
 
-  const scrollPrev = useCallback(() => scrollToPage(page - 1), [page, scrollToPage]);
+  const scrollPrev = useCallback(
+    () => scrollToIndex(Math.max(0, index - 1)),
+    [index, scrollToIndex],
+  );
 
   const scrollNext = useCallback(() => {
-    if (page >= pageCount - 1) {
+    if (index >= itemCount - 1) {
       scrollToIndex(0);
     } else {
-      scrollToPage(page + 1);
+      scrollToIndex(index + 1);
     }
-  }, [page, pageCount, scrollToPage, scrollToIndex]);
+  }, [index, itemCount, scrollToIndex]);
 
   useEffect(() => {
-    if (!autoAdvanceMs || paused || pageCount <= 1) return;
+    if (!autoAdvanceMs || paused || itemCount <= itemsPerView) return;
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     const id = setInterval(scrollNext, autoAdvanceMs);
     return () => clearInterval(id);
-  }, [autoAdvanceMs, paused, pageCount, scrollNext]);
+  }, [autoAdvanceMs, paused, itemCount, itemsPerView, scrollNext]);
 
   return {
     containerRef,
     page,
     pageCount,
-    canScrollPrev: page > 0,
+    canScrollPrev: index > 0,
     scrollPrev,
     scrollNext,
     scrollToPage,

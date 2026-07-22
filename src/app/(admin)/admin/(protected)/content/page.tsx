@@ -53,6 +53,10 @@ export default async function AdminContentPage() {
               content?.brandStatement?.words?.[2] ?? "",
             ],
           },
+          headerLogo: {
+            image: content?.headerLogo?.image ?? "",
+            publicId: content?.headerLogo?.publicId ?? "",
+          },
           bestsellersSection: {
             enabled: content?.bestsellersSection?.enabled ?? true,
             title: content?.bestsellersSection?.title ?? "Trending Bestsellers",

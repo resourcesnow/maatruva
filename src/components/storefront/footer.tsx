@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Phone, MapPin } from "lucide-react";
 import { SiInstagram, SiWhatsapp } from "react-icons/si";
 import { brand } from "@/lib/brand";
 
@@ -73,7 +74,28 @@ export function Footer() {
           <h3 className="font-heading text-maroon-dark text-sm font-semibold tracking-wide uppercase">
             Connect
           </h3>
-          <div className="flex items-center gap-3">
+
+          <a
+            href={`tel:${brand.storeAddress.phone}`}
+            className="text-maroon-dark/80 hover:text-maroon-dark flex items-center gap-2 text-sm"
+          >
+            <span className="border-maroon-dark/20 flex size-8 shrink-0 items-center justify-center rounded-full border bg-white">
+              <Phone className="size-4" />
+            </span>
+            +91 81405 55585
+          </a>
+
+          <div className="text-maroon-dark/80 flex items-start gap-2 text-sm">
+            <span className="border-maroon-dark/20 mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-full border bg-white">
+              <MapPin className="size-4" />
+            </span>
+            <span>
+              {brand.storeAddress.line1}, {brand.storeAddress.city}, {brand.storeAddress.state} -{" "}
+              {brand.storeAddress.pincode}
+            </span>
+          </div>
+
+          <div className="flex items-center gap-3 pl-10">
             <a
               href={brand.social.instagram}
               target="_blank"

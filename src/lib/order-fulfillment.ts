@@ -40,8 +40,33 @@ export async function markOrderPaid(
   if (order.coupon?.code) {
     await Coupon.updateOne({ code: order.coupon.code }, { $inc: { usedCount: 1 } });
   }
+
+  // Atomic, guarded decrement: only applies if enough stock is still available at this exact
+  // moment. Without the stock: { $gte: qty } guard, two concurrent checkouts on the last unit(s)
+  // could both pass the earlier pre-payment check and both decrement here, driving stock
+  // negative (Mongoose's `min: 0` validator doesn't run on updateOne/$inc). Payment has already
+  // been captured by Razorpay by this point, so a conflict here can't un-charge the customer —
+  // instead it's logged and recorded on the order's timeline for manual follow-up (refund or
+  // expedite restock) rather than silently oversold.
+  const stockConflicts: string[] = [];
   for (const item of order.items) {
-    await Product.updateOne({ _id: item.product }, { $inc: { stock: -item.qty } });
+    const updated = await Product.findOneAndUpdate(
+      { _id: item.product, stock: { $gte: item.qty } },
+      { $inc: { stock: -item.qty } },
+    );
+    if (!updated) stockConflicts.push(item.title);
+  }
+  if (stockConflicts.length > 0) {
+    const conflictNote = `Payment succeeded but stock ran out for: ${stockConflicts.join(", ")} — needs manual review (refund or expedite restock).`;
+    console.error(
+      "[order-fulfillment] stock conflict on paid order",
+      order.orderNo,
+      stockConflicts,
+    );
+    await Order.updateOne(
+      { _id: order._id },
+      { $push: { timeline: { status: "confirmed", at: new Date(), note: conflictNote } } },
+    );
   }
 
   // Fire-and-forget side effects: neither should block or fail the payment confirmation itself.

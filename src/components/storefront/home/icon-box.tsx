@@ -44,9 +44,9 @@ export function IconBox({ icon, title, text }: IconBoxItem) {
           {title}
         </h3>
 
-        <div className="grid grid-rows-[0fr] transition-all duration-500 ease-out group-hover:grid-rows-[1fr] group-focus-visible:grid-rows-[1fr]">
+        <div className="grid grid-rows-[1fr] transition-all duration-500 ease-out sm:grid-rows-[0fr] sm:group-hover:grid-rows-[1fr] sm:group-focus-visible:grid-rows-[1fr]">
           <div className="overflow-hidden">
-            <p className="text-maroon-dark group-hover:text-cream-light group-focus-visible:text-cream-light mt-3 translate-y-3 font-sans text-sm opacity-0 transition-all duration-500 ease-out group-hover:translate-y-0 group-hover:opacity-100 group-focus-visible:translate-y-0 group-focus-visible:opacity-100">
+            <p className="text-maroon-dark group-hover:text-cream-light group-focus-visible:text-cream-light mt-3 translate-y-0 font-sans text-sm opacity-100 transition-all duration-500 ease-out sm:translate-y-3 sm:opacity-0 sm:group-hover:translate-y-0 sm:group-hover:opacity-100 sm:group-focus-visible:translate-y-0 sm:group-focus-visible:opacity-100">
               {text}
             </p>
           </div>

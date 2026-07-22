@@ -1,12 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
+import { Accordion as AccordionPrimitive } from "@base-ui/react/accordion";
+import { ChevronDownIcon, ChevronUpIcon } from "lucide-react";
+import { Accordion, AccordionContent, AccordionItem } from "@/components/ui/accordion";
 import { cn } from "@/lib/utils";
 import type { CategoryWithCount } from "@/types/catalog";
 
@@ -44,17 +41,25 @@ export function CategoryTreeNav({
       {tree.map((node) =>
         node.children.length > 0 ? (
           <AccordionItem key={node.id} value={node.id} className="border-none">
-            <AccordionTrigger
-              className={cn(
-                "text-maroon hover:bg-cream min-h-10 rounded-md px-2 text-sm font-semibold no-underline hover:no-underline",
-                activeCategorySlug === node.slug && "bg-gold/10",
-              )}
-            >
-              <span className="flex items-center gap-2">
+            <AccordionPrimitive.Header className="flex items-center gap-1">
+              <Link
+                href={`/product-category/${node.slug}`}
+                className={cn(
+                  "text-maroon hover:bg-cream flex min-h-10 flex-1 items-center gap-2 rounded-md px-2 text-sm font-semibold transition-colors",
+                  activeCategorySlug === node.slug && "bg-gold/10",
+                )}
+              >
                 <span>{node.name}</span>
                 <span className="text-maroon/50 text-xs font-normal">({node.count})</span>
-              </span>
-            </AccordionTrigger>
+              </Link>
+              <AccordionPrimitive.Trigger
+                aria-label={`Toggle ${node.name} subcategories`}
+                className="group/accordion-trigger text-maroon hover:bg-cream focus-visible:ring-gold flex size-10 shrink-0 items-center justify-center rounded-md outline-none focus-visible:ring-2"
+              >
+                <ChevronDownIcon className="size-4 group-aria-expanded/accordion-trigger:hidden" />
+                <ChevronUpIcon className="hidden size-4 group-aria-expanded/accordion-trigger:inline" />
+              </AccordionPrimitive.Trigger>
+            </AccordionPrimitive.Header>
             <AccordionContent className="[&_a]:no-underline [&_a]:hover:no-underline">
               <ul className="border-cream-dark ml-3 flex flex-col gap-0.5 border-l-2 pl-3">
                 {node.children.map((child) => (
