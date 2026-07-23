@@ -3,7 +3,9 @@ import { notFound } from "next/navigation";
 import { getOrderById } from "@/lib/data/orders";
 import { OrderStatusSelect } from "@/components/admin/orders/order-status-select";
 import { RefreshTrackingButton } from "@/components/admin/orders/refresh-tracking-button";
-import { formatINR } from "@/lib/format";
+import { MarkPaidButton } from "@/components/admin/orders/mark-paid-button";
+import { PaymentStatusBadge } from "@/components/storefront/order/payment-status-badge";
+import { formatINR, formatDateTime } from "@/lib/format";
 
 export const metadata: Metadata = { title: "Order Detail" };
 export const dynamic = "force-dynamic";
@@ -20,7 +22,10 @@ export default async function AdminOrderDetailPage({
   return (
     <div className="flex max-w-3xl flex-col gap-6">
       <div className="flex items-center justify-between">
-        <h1 className="font-heading text-2xl font-semibold">Order #{order.orderNo}</h1>
+        <div className="flex items-center gap-3">
+          <h1 className="font-heading text-2xl font-semibold">Order #{order.orderNo}</h1>
+          <PaymentStatusBadge status={order.payment.status} />
+        </div>
         <OrderStatusSelect orderId={order._id} orderNo={order.orderNo} status={order.status} />
       </div>
 
@@ -74,9 +79,19 @@ export default async function AdminOrderDetailPage({
       </div>
 
       <div className="border-border rounded-xl border p-5">
-        <h2 className="font-heading mb-2 text-lg font-semibold">Payment</h2>
-        <p className="text-sm capitalize">Status: {order.payment.status}</p>
+        <div className="mb-2 flex items-center justify-between">
+          <h2 className="font-heading text-lg font-semibold">Payment</h2>
+          {order.payment.status === "pay_at_store" && (
+            <MarkPaidButton orderId={order._id} orderNo={order.orderNo} />
+          )}
+        </div>
+        <p className="text-sm capitalize">Status: {order.payment.status.replaceAll("_", " ")}</p>
         <p className="text-muted-foreground text-sm">Provider: {order.payment.provider}</p>
+        {order.payment.status === "pay_at_store" && (
+          <p className="text-destructive mt-2 text-sm font-medium">
+            {formatINR(order.total)} due — not yet collected from the customer.
+          </p>
+        )}
       </div>
 
       {order.deliveryMethod === "delivery" && (
@@ -111,7 +126,7 @@ export default async function AdminOrderDetailPage({
             <li key={i} className="flex flex-col">
               <div className="flex justify-between">
                 <span className="capitalize">{t.status}</span>
-                <span className="text-muted-foreground">{new Date(t.at).toLocaleString()}</span>
+                <span className="text-muted-foreground">{formatDateTime(t.at)}</span>
               </div>
               {t.note && <span className="text-muted-foreground text-xs">{t.note}</span>}
             </li>

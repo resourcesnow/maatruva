@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/components/providers/session-provider";
 import { SmoothScrollProvider } from "@/components/providers/smooth-scroll-provider";
+import { PreloaderGate } from "@/components/providers/preloader-gate";
 import { auth } from "@/lib/auth";
 import { brand } from "@/lib/brand";
 import "./globals.css";
@@ -65,7 +66,7 @@ export default async function RootLayout({
           <MotionConfig reducedMotion="user">
             <TooltipProvider delay={200}>
               <SmoothScrollProvider />
-              {children}
+              <PreloaderGate>{children}</PreloaderGate>
               <Toaster position="bottom-right" richColors closeButton />
             </TooltipProvider>
           </MotionConfig>

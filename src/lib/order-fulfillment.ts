@@ -11,7 +11,13 @@ import {
   ShiprocketConfigError,
   ShiprocketWalletBalanceError,
 } from "@/lib/shiprocket";
-import { notifyOrderConfirmed, notifyPaymentFailed } from "@/lib/order-notifications";
+import { brand } from "@/lib/brand";
+import {
+  notifyOrderConfirmed,
+  notifyPaymentFailed,
+  notifyPayAtStoreOrderPlaced,
+} from "@/lib/order-notifications";
+import { validateCouponAction } from "@/lib/actions/coupon";
 
 export async function markOrderPaid(
   razorpayOrderId: string,
@@ -104,6 +110,127 @@ export async function markOrderFailed(razorpayOrderId: string, note: string) {
       console.error("[order-fulfillment] payment-failed notification failed", order.orderNo, err);
     });
   }
+
+  return order;
+}
+
+export type PayAtStoreOrderInput = {
+  items: { productId: string; qty: number }[];
+  fullName: string;
+  userId?: string;
+  guestEmail?: string;
+  couponCode?: string;
+};
+
+export class OrderValidationError extends Error {}
+
+// Pickup-at-Store + Pay-at-Store only (never delivery — that always goes through Razorpay).
+// Stock and coupon usage are committed immediately, matching markOrderPaid's semantics for a
+// *real, accepted* order — unlike the online flow, there's no separate "payment confirmed"
+// moment to defer them to, since this order is real the instant it's placed even though money
+// hasn't changed hands yet. Never touches Razorpay or Shiprocket at any point.
+export async function createPayAtStoreOrder(input: PayAtStoreOrderInput) {
+  await connectDB();
+
+  const products = await Product.find({
+    _id: { $in: input.items.map((i) => i.productId) },
+    status: "published",
+  });
+  const byId = new Map(products.map((p) => [p._id.toString(), p]));
+
+  const orderItems = [];
+  let subtotal = 0;
+
+  for (const item of input.items) {
+    const product = byId.get(item.productId);
+    if (!product) throw new OrderValidationError("One or more products are unavailable.");
+    if (product.stock < item.qty) {
+      throw new OrderValidationError(`${product.title} is out of stock.`);
+    }
+    const price = product.salePrice ?? product.price;
+    subtotal += price * item.qty;
+    orderItems.push({
+      product: product._id,
+      title: product.title,
+      sku: product.sku,
+      image: product.images[0]?.url,
+      price,
+      qty: item.qty,
+    });
+  }
+
+  let discount = 0;
+  let appliedCoupon: { code: string; value: number } | undefined;
+  if (input.couponCode) {
+    const result = await validateCouponAction(input.couponCode, subtotal);
+    if (result.ok) {
+      discount = result.discount;
+      appliedCoupon = { code: result.code, value: result.discount };
+    }
+  }
+
+  const total = Math.max(0, subtotal - discount);
+  const orderNo = `MTV${Date.now().toString().slice(-8)}`;
+
+  const order = await Order.create({
+    orderNo,
+    user: input.userId ?? null,
+    guestEmail: input.userId ? null : input.guestEmail,
+    items: orderItems,
+    shippingAddress: { name: input.fullName, ...brand.storeAddress },
+    subtotal,
+    discount,
+    shippingFee: 0,
+    total,
+    coupon: appliedCoupon,
+    payment: { provider: "pay_at_store", status: "pay_at_store" },
+    deliveryMethod: "pickup",
+    status: "placed",
+    timeline: [{ status: "placed", at: new Date(), note: "Placed — to pay in person at pickup" }],
+  });
+
+  if (appliedCoupon) {
+    await Coupon.updateOne({ code: appliedCoupon.code }, { $inc: { usedCount: 1 } });
+  }
+
+  // Same atomic guarded decrement as markOrderPaid — see that function's comment for why the
+  // $gte guard matters. No payment has been captured here, so a conflict is lower-stakes than
+  // the online path, but still logged for manual follow-up rather than silently oversold.
+  const stockConflicts: string[] = [];
+  for (const item of order.items) {
+    const updated = await Product.findOneAndUpdate(
+      { _id: item.product, stock: { $gte: item.qty } },
+      { $inc: { stock: -item.qty } },
+    );
+    if (!updated) stockConflicts.push(item.title);
+  }
+  if (stockConflicts.length > 0) {
+    console.error(
+      "[order-fulfillment] stock conflict on pay-at-store order",
+      order.orderNo,
+      stockConflicts,
+    );
+    await Order.updateOne(
+      { _id: order._id },
+      {
+        $push: {
+          timeline: {
+            status: order.status,
+            at: new Date(),
+            note: `Stock ran out for: ${stockConflicts.join(", ")} — needs manual review.`,
+          },
+        },
+      },
+    );
+  }
+
+  notifyPayAtStoreOrderPlaced(order).catch((err) => {
+    console.error(
+      "[order-fulfillment] pay-at-store confirmation notification failed",
+      order.orderNo,
+      err,
+    );
+  });
 
   return order;
 }

@@ -130,7 +130,9 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
       <Reveal className="mt-16">
         <Tabs defaultValue="description">
           <TabsList>
-            <TabsTrigger value="description">Description</TabsTrigger>
+            {/* Label says "Product Highlights" per client request — still reads from
+                product.description, tab value="description" unchanged intentionally. */}
+            <TabsTrigger value="description">Product Highlights</TabsTrigger>
             {product.attributes.length > 0 && (
               <TabsTrigger value="additional-info">Additional Information</TabsTrigger>
             )}

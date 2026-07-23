@@ -15,6 +15,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ConfirmActionDialog } from "@/components/admin/confirm-action-dialog";
 import { deleteCouponAction } from "@/lib/actions/admin/coupons";
+import { formatDate } from "@/lib/format";
 
 type Row = {
   _id: string;
@@ -46,9 +47,7 @@ function CouponRow({ coupon }: { coupon: Row }) {
         {coupon.usedCount}
         {coupon.usageLimit ? ` / ${coupon.usageLimit}` : ""}
       </TableCell>
-      <TableCell className="text-muted-foreground">
-        {new Date(coupon.expiresAt).toLocaleDateString()}
-      </TableCell>
+      <TableCell className="text-muted-foreground">{formatDate(coupon.expiresAt)}</TableCell>
       <TableCell>
         <Badge variant={coupon.isActive ? "default" : "secondary"}>
           {coupon.isActive ? "Active" : "Inactive"}

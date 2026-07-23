@@ -11,6 +11,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { PaginationBar } from "@/components/storefront/pagination-bar";
+import { formatDateTime } from "@/lib/format";
 
 export const metadata: Metadata = { title: "Audit Log" };
 export const dynamic = "force-dynamic";
@@ -86,7 +87,7 @@ export default async function AuditLogPage({
               {entries.map((entry) => (
                 <TableRow key={entry.id}>
                   <TableCell className="text-muted-foreground text-xs whitespace-nowrap">
-                    {new Date(entry.at).toLocaleString()}
+                    {formatDateTime(entry.at)}
                   </TableCell>
                   <TableCell>
                     <span className="font-medium">{entry.actorName}</span>

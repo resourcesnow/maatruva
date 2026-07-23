@@ -46,8 +46,12 @@ const orderSchema = new Schema(
       paymentId: { type: String },
       signature: { type: String },
       status: {
+        // "pay_at_store": order placed and stock committed, but no money has changed hands yet
+        // — Pickup-at-Store orders only, customer pays cash/UPI in person. Deliberately its own
+        // distinct value (not "created", which means "mid-checkout, no order commitment yet",
+        // and not "paid") so it can never be confused with either in admin views/reporting.
         type: String,
-        enum: ["created", "paid", "failed", "refunded"],
+        enum: ["created", "paid", "failed", "refunded", "pay_at_store"],
         default: "created",
       },
     },

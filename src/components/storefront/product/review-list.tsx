@@ -1,5 +1,6 @@
 import { Star } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { formatDate } from "@/lib/format";
 
 export type ReviewItem = {
   id: string;
@@ -50,9 +51,7 @@ export function ReviewList({ reviews }: { reviews: ReviewItem[] }) {
         <li key={review.id} className="border-border rounded-xl border p-4">
           <div className="flex items-center justify-between">
             <Stars rating={review.rating} />
-            <span className="text-muted-foreground text-xs">
-              {new Date(review.createdAt).toLocaleDateString()}
-            </span>
+            <span className="text-muted-foreground text-xs">{formatDate(review.createdAt)}</span>
           </div>
           {review.title && <p className="mt-2 font-medium">{review.title}</p>}
           {review.comment && <p className="text-muted-foreground mt-1 text-sm">{review.comment}</p>}

@@ -13,6 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { PaginationBar } from "@/components/storefront/pagination-bar";
 import { SortableHeader } from "@/components/admin/sortable-header";
+import { formatDate } from "@/lib/format";
 
 export const metadata: Metadata = { title: "Customers" };
 export const dynamic = "force-dynamic";
@@ -94,7 +95,7 @@ export default async function AdminCustomersPage({
                 <TableCell className="text-muted-foreground">{customer.email ?? "—"}</TableCell>
                 <TableCell className="text-muted-foreground">{customer.phone ?? "—"}</TableCell>
                 <TableCell className="text-muted-foreground">
-                  {new Date(customer.createdAt).toLocaleDateString()}
+                  {formatDate(customer.createdAt)}
                 </TableCell>
               </TableRow>
             ))}

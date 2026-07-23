@@ -2,7 +2,7 @@
 // Next's bundler). Never imported by a client component.
 import { sendEmail } from "@/lib/resend";
 import { brand } from "@/lib/brand";
-import { formatINR } from "@/lib/format";
+import { formatINR, formatDate } from "@/lib/format";
 
 const FOOTER_LINE =
   "This is an automated message. For any query, reach out to support@maatruva.com.";
@@ -45,7 +45,15 @@ export type OrderConfirmationData = {
   deliveryMethod: "delivery" | "pickup";
 };
 
-export async function sendOrderConfirmationEmail(email: string, order: OrderConfirmationData) {
+// Shared by sendOrderConfirmationEmail and sendPayAtStoreConfirmationEmail — same invoice-style
+// item table, different framing text/subject around it.
+function renderItemsTable(order: {
+  items: OrderEmailItem[];
+  subtotal: number;
+  discount: number;
+  shippingFee: number;
+  total: number;
+}) {
   const rows = order.items
     .map(
       (item) => `
@@ -65,6 +73,27 @@ export async function sendOrderConfirmationEmail(email: string, order: OrderConf
     </tr>
   `;
 
+  return `
+    <table style="width: 100%; border-collapse: collapse; margin: 16px 0;">
+      <thead>
+        <tr style="border-bottom: 2px solid #7a1f2e;">
+          <th style="text-align: left; padding: 8px 0;">Item</th>
+          <th style="text-align: center; padding: 8px 0;">Qty</th>
+          <th style="text-align: right; padding: 8px 0;">Price</th>
+        </tr>
+      </thead>
+      <tbody>${rows}</tbody>
+      <tfoot>
+        ${summaryRow("Subtotal", formatINR(order.subtotal))}
+        ${order.discount > 0 ? summaryRow("Discount", `-${formatINR(order.discount)}`) : ""}
+        ${order.shippingFee > 0 ? summaryRow("Shipping", formatINR(order.shippingFee)) : ""}
+        ${summaryRow("Total", formatINR(order.total), true)}
+      </tfoot>
+    </table>
+  `;
+}
+
+export async function sendOrderConfirmationEmail(email: string, order: OrderConfirmationData) {
   const addressHtml =
     order.deliveryMethod === "pickup"
       ? `<p style="color: #555;">You've chosen to pick up this order in person from our store.</p>`
@@ -82,30 +111,56 @@ export async function sendOrderConfirmationEmail(email: string, order: OrderConf
     bodyHtml: `
       <p style="color: #555;">
         Thanks for your order! Here's your invoice for order <strong>${order.orderNo}</strong>,
-        placed on ${order.createdAt.toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" })}.
+        placed on ${formatDate(order.createdAt)}.
       </p>
-      <table style="width: 100%; border-collapse: collapse; margin: 16px 0;">
-        <thead>
-          <tr style="border-bottom: 2px solid #7a1f2e;">
-            <th style="text-align: left; padding: 8px 0;">Item</th>
-            <th style="text-align: center; padding: 8px 0;">Qty</th>
-            <th style="text-align: right; padding: 8px 0;">Price</th>
-          </tr>
-        </thead>
-        <tbody>${rows}</tbody>
-        <tfoot>
-          ${summaryRow("Subtotal", formatINR(order.subtotal))}
-          ${order.discount > 0 ? summaryRow("Discount", `-${formatINR(order.discount)}`) : ""}
-          ${order.shippingFee > 0 ? summaryRow("Shipping", formatINR(order.shippingFee)) : ""}
-          ${summaryRow("Total", formatINR(order.total), true)}
-        </tfoot>
-      </table>
+      ${renderItemsTable(order)}
       <h3 style="margin-bottom: 4px;">${order.deliveryMethod === "pickup" ? "Pickup" : "Shipping Address"}</h3>
       ${addressHtml}
     `,
   });
 
   await sendEmail({ to: email, subject: `Order Confirmed — ${order.orderNo}`, html });
+}
+
+export type PayAtStoreConfirmationData = {
+  orderNo: string;
+  createdAt: Date;
+  items: OrderEmailItem[];
+  subtotal: number;
+  discount: number;
+  total: number;
+};
+
+// Deliberately distinct from sendOrderConfirmationEmail — this must never claim payment was
+// received, since none was. Pickup-at-Store + Pay at Store only; shippingFee is always 0 for
+// this path so it's omitted from the type entirely rather than passed as a fake zero.
+export async function sendPayAtStoreConfirmationEmail(
+  email: string,
+  order: PayAtStoreConfirmationData,
+) {
+  const html = renderEmailLayout({
+    title: "Order Placed — Pay at Store",
+    bodyHtml: `
+      <p style="color: #555;">
+        Thanks for your order! Here's a summary of order <strong>${order.orderNo}</strong>,
+        placed on ${formatDate(order.createdAt)}.
+      </p>
+      <p style="color: #7a1f2e; font-weight: 700; background: #faf0f1; padding: 12px 16px; border-radius: 8px;">
+        No payment has been made yet — please pay ${formatINR(order.total)} in cash or UPI when
+        you collect your order at our store.
+      </p>
+      ${renderItemsTable({ ...order, shippingFee: 0 })}
+      <h3 style="margin-bottom: 4px;">Pickup</h3>
+      <p style="color: #555;">
+        ${brand.name} Store<br/>
+        ${brand.storeAddress.line1}<br/>
+        ${brand.storeAddress.city}, ${brand.storeAddress.state} - ${brand.storeAddress.pincode}<br/>
+        ${brand.storeAddress.phone}
+      </p>
+    `,
+  });
+
+  await sendEmail({ to: email, subject: `Order Placed (Pay at Store) — ${order.orderNo}`, html });
 }
 
 export async function sendPaymentFailedEmail(
@@ -173,7 +228,7 @@ export async function sendPreDeliveryReminderEmail(
     bodyHtml: `
       <p style="color: #555;">
         Order <strong>${order.orderNo}</strong> is expected to arrive around
-        <strong>${order.estimatedDelivery.toLocaleDateString("en-IN", { day: "numeric", month: "long" })}</strong>.
+        <strong>${formatDate(order.estimatedDelivery)}</strong>.
         Someone should be available to receive it.
       </p>
     `,

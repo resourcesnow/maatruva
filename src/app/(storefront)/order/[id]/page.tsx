@@ -25,6 +25,16 @@ export default async function OrderPage({ params }: { params: Promise<{ id: stri
           <p className="text-muted-foreground">Order confirmation has been sent to your email.</p>
         </div>
       )}
+      {order.payment.status === "pay_at_store" && (
+        <div className="mb-8 flex flex-col items-center gap-2 text-center">
+          <CheckCircle2 className="text-brand-secondary size-12" />
+          <h1 className="font-heading text-2xl font-semibold">Your order is placed!</h1>
+          <p className="text-muted-foreground">
+            No payment has been made yet — pay {formatINR(order.total)} in cash or UPI when you
+            collect it at our store.
+          </p>
+        </div>
+      )}
 
       <div className="border-border rounded-2xl border p-6">
         <div className="flex flex-wrap items-center justify-between gap-2">
@@ -78,6 +88,11 @@ export default async function OrderPage({ params }: { params: Promise<{ id: stri
             <span>Total</span>
             <span>{formatINR(order.total)}</span>
           </div>
+          {order.payment.status === "pay_at_store" && (
+            <p className="text-brand-secondary mt-1 text-xs font-medium">
+              Pay at store — {formatINR(order.total)} due at pickup.
+            </p>
+          )}
         </div>
 
         {order.deliveryMethod === "pickup" ? (

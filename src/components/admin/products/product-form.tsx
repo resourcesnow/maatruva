@@ -193,7 +193,9 @@ export function ProductForm({
       </div>
 
       <div className="flex flex-col gap-1.5">
-        <Label htmlFor="shortDescription">Short Description</Label>
+        {/* Label says "Description" per client request — field name/binding (shortDescription)
+            intentionally left as-is, this is a display-text-only rename. */}
+        <Label htmlFor="shortDescription">Description</Label>
         <Textarea
           id="shortDescription"
           name="shortDescription"
@@ -203,7 +205,9 @@ export function ProductForm({
       </div>
 
       <div className="flex flex-col gap-1.5">
-        <Label htmlFor="description">Description</Label>
+        {/* Label says "Product Highlights" per client request — field name/binding
+            (description) intentionally left as-is, this is a display-text-only rename. */}
+        <Label htmlFor="description">Product Highlights</Label>
         <Textarea
           id="description"
           name="description"

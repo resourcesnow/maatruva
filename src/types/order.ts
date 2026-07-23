@@ -29,7 +29,7 @@ export type OrderSummary = {
   coupon?: { code?: string; value?: number };
   payment: {
     provider: string;
-    status: "created" | "paid" | "failed" | "refunded";
+    status: "created" | "paid" | "failed" | "refunded" | "pay_at_store";
   };
   deliveryMethod: "delivery" | "pickup";
   shipping?: {

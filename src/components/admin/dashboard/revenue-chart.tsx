@@ -125,9 +125,10 @@ export function RevenueChart({ data }: { data: Point[] }) {
             fontSize={10}
             fill="var(--muted-foreground)"
           >
-            {new Date(points[i].date).toLocaleDateString(undefined, {
+            {new Date(points[i].date).toLocaleDateString("en-IN", {
               month: "short",
               day: "numeric",
+              timeZone: "Asia/Kolkata",
             })}
           </text>
         ))}
@@ -161,9 +162,10 @@ export function RevenueChart({ data }: { data: Point[] }) {
         >
           <p className="font-medium">{formatINR(hovered.revenue)}</p>
           <p className="text-muted-foreground">
-            {new Date(hovered.date).toLocaleDateString(undefined, {
+            {new Date(hovered.date).toLocaleDateString("en-IN", {
               month: "short",
               day: "numeric",
+              timeZone: "Asia/Kolkata",
             })}
           </p>
         </div>

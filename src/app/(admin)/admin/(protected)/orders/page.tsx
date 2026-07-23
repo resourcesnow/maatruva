@@ -12,9 +12,10 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { OrderStatusBadge } from "@/components/storefront/order/order-status-badge";
+import { PaymentStatusBadge } from "@/components/storefront/order/payment-status-badge";
 import { PaginationBar } from "@/components/storefront/pagination-bar";
 import { SortableHeader } from "@/components/admin/sortable-header";
-import { formatINR } from "@/lib/format";
+import { formatINR, formatDate } from "@/lib/format";
 import type { OrderSummary } from "@/types/order";
 
 export const metadata: Metadata = { title: "Orders" };
@@ -105,12 +106,18 @@ export default async function AdminOrdersPage({
                 </TableCell>
                 <TableCell>{order.shippingAddress.name}</TableCell>
                 <TableCell>{formatINR(order.total)}</TableCell>
-                <TableCell className="capitalize">{order.payment.status}</TableCell>
+                <TableCell>
+                  {order.payment.status === "pay_at_store" || order.payment.status === "failed" ? (
+                    <PaymentStatusBadge status={order.payment.status} />
+                  ) : (
+                    <span className="capitalize">{order.payment.status}</span>
+                  )}
+                </TableCell>
                 <TableCell>
                   <OrderStatusBadge status={order.status} />
                 </TableCell>
                 <TableCell className="text-muted-foreground">
-                  {new Date(order.createdAt).toLocaleDateString()}
+                  {formatDate(order.createdAt)}
                 </TableCell>
               </TableRow>
             ))}

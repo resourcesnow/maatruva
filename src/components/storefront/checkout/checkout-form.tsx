@@ -22,6 +22,7 @@ import { formatINR } from "@/lib/format";
 import { brand } from "@/lib/brand";
 
 type DeliveryMethod = "delivery" | "pickup";
+type PickupPaymentMethod = "online" | "pay_at_store";
 
 type ShippingEstimate =
   | { status: "loading" }
@@ -65,6 +66,10 @@ export function CheckoutForm({
   const [submitting, setSubmitting] = useState(false);
   const [deliveryMethod, setDeliveryMethod] = useState<DeliveryMethod>("delivery");
   const [pickupConfirmOpen, setPickupConfirmOpen] = useState(false);
+  // Defaults to "online" so a customer who never touches this new choice gets exactly the
+  // existing Pay Online Now behavior — nothing changes for them by omission.
+  const [pickupPaymentMethod, setPickupPaymentMethod] = useState<PickupPaymentMethod>("online");
+  const isPayAtStore = deliveryMethod === "pickup" && pickupPaymentMethod === "pay_at_store";
 
   const [fullName, setFullName] = useState(userName ?? "");
   const [guestEmail, setGuestEmail] = useState(userEmail ?? "");
@@ -166,6 +171,34 @@ export function CheckoutForm({
 
     if (notServiceable) {
       toast.error("We can't deliver to this pincode. Try store pickup instead.");
+      return;
+    }
+
+    if (isPayAtStore) {
+      setSubmitting(true);
+      try {
+        const res = await fetch("/api/orders/pay-at-store", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            items: items.map((i) => ({ productId: i.productId, qty: i.qty })),
+            fullName,
+            guestEmail: isLoggedIn ? undefined : guestEmail,
+            couponCode: couponCode ?? undefined,
+          }),
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          toast.error(data.error ?? "Could not create order.");
+          setSubmitting(false);
+          return;
+        }
+        clearCart();
+        router.push(`/order/${data.mongoOrderId}`);
+      } catch {
+        toast.error("Something went wrong. Please try again.");
+        setSubmitting(false);
+      }
       return;
     }
 
@@ -404,6 +437,44 @@ export function CheckoutForm({
             </label>
           </div>
         </div>
+
+        {deliveryMethod === "pickup" && (
+          <div>
+            <h2 className="font-heading mb-3 text-lg font-semibold">Payment Method</h2>
+            <div className="flex flex-col gap-2">
+              <label className="border-border has-checked:border-primary flex cursor-pointer items-start gap-2 rounded-lg border p-3 text-sm">
+                <input
+                  type="radio"
+                  name="pickupPaymentMethod"
+                  checked={pickupPaymentMethod === "online"}
+                  onChange={() => setPickupPaymentMethod("online")}
+                  className="mt-1"
+                />
+                <span>
+                  <strong>Pay Online Now</strong>
+                  <span className="text-muted-foreground block">
+                    Pay by card, UPI, or netbanking now via Razorpay.
+                  </span>
+                </span>
+              </label>
+              <label className="border-border has-checked:border-primary flex cursor-pointer items-start gap-2 rounded-lg border p-3 text-sm">
+                <input
+                  type="radio"
+                  name="pickupPaymentMethod"
+                  checked={pickupPaymentMethod === "pay_at_store"}
+                  onChange={() => setPickupPaymentMethod("pay_at_store")}
+                  className="mt-1"
+                />
+                <span>
+                  <strong>Pay at Store</strong>
+                  <span className="text-muted-foreground block">
+                    Skip online payment — pay in cash or UPI when you collect your order.
+                  </span>
+                </span>
+              </label>
+            </div>
+          </div>
+        )}
       </div>
 
       <AlertDialog
@@ -497,15 +568,21 @@ export function CheckoutForm({
           <span>Total</span>
           <span>{formatINR(estimatedTotal)}</span>
         </div>
-        <p className="text-muted-foreground text-xs">
-          Coupon discount, if any, is applied at payment.
-        </p>
+        {isPayAtStore ? (
+          <p className="text-brand-secondary text-xs font-medium">
+            No payment now — pay {formatINR(estimatedTotal)} in cash or UPI at pickup.
+          </p>
+        ) : (
+          <p className="text-muted-foreground text-xs">
+            Coupon discount, if any, is applied at payment.
+          </p>
+        )}
         <Button
           size="lg"
           disabled={submitting || items.length === 0 || notServiceable}
           onClick={handlePlaceOrder}
         >
-          {submitting ? "Processing..." : "Pay Now"}
+          {submitting ? "Processing..." : isPayAtStore ? "Place Order" : "Pay Now"}
         </Button>
       </div>
     </div>

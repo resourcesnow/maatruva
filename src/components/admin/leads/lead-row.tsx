@@ -6,6 +6,7 @@ import { TableCell, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { toggleLeadActionedAction } from "@/lib/actions/admin/leads";
+import { formatDate } from "@/lib/format";
 
 export type LeadRowData = {
   id: string;
@@ -34,9 +35,7 @@ export function LeadRow({ lead }: { lead: LeadRowData }) {
       <TableCell>{lead.email ?? "—"}</TableCell>
       <TableCell>{lead.phone ?? "—"}</TableCell>
       <TableCell className="max-w-xs truncate text-sm">{lead.message || "—"}</TableCell>
-      <TableCell className="text-muted-foreground text-xs">
-        {new Date(lead.createdAt).toLocaleDateString()}
-      </TableCell>
+      <TableCell className="text-muted-foreground text-xs">{formatDate(lead.createdAt)}</TableCell>
       <TableCell>
         <Badge variant={lead.isActioned ? "secondary" : "outline"}>
           {lead.isActioned ? "Actioned" : "New"}

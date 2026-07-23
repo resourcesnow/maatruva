@@ -4,6 +4,7 @@ import { Star } from "lucide-react";
 import { auth } from "@/lib/auth";
 import { getUserReviews } from "@/lib/data/reviews";
 import { Badge } from "@/components/ui/badge";
+import { formatDate } from "@/lib/format";
 
 export const metadata: Metadata = { title: "My Reviews" };
 export const dynamic = "force-dynamic";
@@ -53,9 +54,7 @@ export default async function AccountReviewsPage() {
               {review.comment && (
                 <p className="text-muted-foreground mt-1 text-sm">{review.comment}</p>
               )}
-              <p className="text-muted-foreground mt-2 text-xs">
-                {new Date(review.createdAt).toLocaleDateString()}
-              </p>
+              <p className="text-muted-foreground mt-2 text-xs">{formatDate(review.createdAt)}</p>
             </li>
           ))}
         </ul>

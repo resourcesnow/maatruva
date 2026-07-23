@@ -44,6 +44,43 @@ export async function updateOrderStatusAction(orderId: string, status: OrderStat
   return { ok: true, error: null };
 }
 
+// Staff-triggered transition for Pickup + Pay-at-Store orders once the customer actually pays
+// in person. Only valid from "pay_at_store" — guards against accidentally "confirming" payment
+// on an order that was never in that state (e.g. already paid, or failed). Stock and coupon
+// usage were already committed at order placement (see createPayAtStoreOrder), so this only
+// updates payment/order status — never touches Shiprocket, since pickup orders never ship.
+export async function markPayAtStorePaidAction(orderId: string) {
+  const session = await auth();
+  requireRole(session, roleMatrix.ordersManage);
+
+  await connectDB();
+  const order = await Order.findOneAndUpdate(
+    { _id: orderId, "payment.status": "pay_at_store" },
+    {
+      $set: { "payment.status": "paid", status: "confirmed" },
+      $push: {
+        timeline: { status: "confirmed", at: new Date(), note: "Payment collected at store" },
+      },
+    },
+    { returnDocument: "after" },
+  );
+
+  if (!order) {
+    return { ok: false, error: "This order isn't awaiting in-store payment." };
+  }
+
+  await logAdminAction(session, {
+    action: "status_change",
+    entityType: "Order",
+    entityId: orderId,
+    entityLabel: `#${order.orderNo} → paid (collected at store)`,
+  });
+
+  revalidatePath("/admin/orders");
+  revalidatePath(`/admin/orders/${orderId}`);
+  return { ok: true, error: null };
+}
+
 // Polling-based tracking refresh — there's no Shiprocket webhook configured yet (no publicly
 // reachable URL to register), so tracking updates happen on-demand from the admin order page.
 export async function refreshShipmentTrackingAction(orderId: string) {

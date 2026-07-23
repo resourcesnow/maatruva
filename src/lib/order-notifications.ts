@@ -6,6 +6,7 @@ import { connectDB } from "@/lib/db";
 import { User } from "@/models/User";
 import {
   sendOrderConfirmationEmail,
+  sendPayAtStoreConfirmationEmail,
   sendPaymentFailedEmail,
   sendOrderShippedEmail,
   sendPreDeliveryReminderEmail,
@@ -57,6 +58,28 @@ export async function notifyOrderConfirmed(order: OrderLike) {
       phone: order.shippingAddress.phone,
     },
     deliveryMethod: order.deliveryMethod as "delivery" | "pickup",
+  });
+}
+
+export async function notifyPayAtStoreOrderPlaced(order: OrderLike) {
+  const email = await resolveOrderRecipientEmail(order);
+  if (!email) {
+    console.warn(`[order-notifications] order ${order.orderNo} has no recipient email — skipping.`);
+    return;
+  }
+
+  await sendPayAtStoreConfirmationEmail(email, {
+    orderNo: order.orderNo,
+    createdAt: order.createdAt ?? new Date(),
+    items: order.items.map((item) => ({
+      title: item.title,
+      sku: item.sku,
+      price: item.price,
+      qty: item.qty,
+    })),
+    subtotal: order.subtotal,
+    discount: order.discount,
+    total: order.total,
   });
 }
 

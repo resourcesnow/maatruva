@@ -5,7 +5,7 @@ import { getUserOrders } from "@/lib/data/orders";
 import { OrderStatusBadge } from "@/components/storefront/order/order-status-badge";
 import { ReorderButton } from "@/components/storefront/order/reorder-button";
 import { SmartImage as Image } from "@/components/ui/smart-image";
-import { formatINR } from "@/lib/format";
+import { formatINR, formatDate } from "@/lib/format";
 
 export const metadata: Metadata = { title: "My Orders" };
 export const dynamic = "force-dynamic";
@@ -42,8 +42,7 @@ export default async function OrdersPage() {
                       #{order.orderNo}
                     </Link>
                     <p className="text-muted-foreground text-xs">
-                      {new Date(order.createdAt).toLocaleDateString()} · {order.items.length}{" "}
-                      item(s)
+                      {formatDate(order.createdAt)} · {order.items.length} item(s)
                     </p>
                   </div>
                 </div>
