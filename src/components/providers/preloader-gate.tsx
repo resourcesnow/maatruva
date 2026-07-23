@@ -7,7 +7,7 @@ import { Preloader } from "@/components/motion/preloader";
 // can complete in well under 100ms, which would cut the entrance choreography off before it's
 // even visible. MIN_DISPLAY_MS guarantees it's seen at least once; real hydration readiness is
 // still the ceiling, so a genuinely slow load is never held up any longer than it already is.
-const MIN_DISPLAY_MS = 600;
+const MIN_DISPLAY_MS = 1500;
 
 export function PreloaderGate({ children }: { children: React.ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
