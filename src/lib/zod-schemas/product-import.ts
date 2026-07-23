@@ -22,6 +22,9 @@ export type BulkProductRowInput = z.infer<typeof bulkProductRowSchema>;
 
 // Exact header names expected in the uploaded spreadsheet's first row — must match
 // public/product-import-template.xlsx and the mapping in bulkImportProductsAction.
+// "Description" here maps to the shortDescription field and "Product Highlights" maps to
+// the description field — labels only, matching the admin form / storefront rename; the
+// underlying field mapping is unchanged.
 export const PRODUCT_IMPORT_COLUMNS = [
   "Title",
   "Slug",
@@ -31,6 +34,6 @@ export const PRODUCT_IMPORT_COLUMNS = [
   "Sale Price",
   "Stock",
   "Low Stock Threshold",
-  "Short Description",
   "Description",
+  "Product Highlights",
 ] as const;

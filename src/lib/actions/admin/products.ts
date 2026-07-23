@@ -233,8 +233,8 @@ export async function bulkImportProductsAction(_prevState: unknown, formData: Fo
       salePrice: cellToOptional(raw["Sale Price"]),
       stock: cellToOptional(raw["Stock"]),
       lowStockThreshold: cellToOptional(raw["Low Stock Threshold"]),
-      shortDescription: raw["Short Description"] ?? "",
-      description: raw["Description"] ?? "",
+      shortDescription: raw["Description"] ?? "",
+      description: raw["Product Highlights"] ?? "",
     });
 
     if (!parsed.success) {

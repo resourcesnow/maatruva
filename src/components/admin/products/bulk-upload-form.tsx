@@ -32,7 +32,7 @@ export function BulkUploadForm() {
       <div className="border-border flex flex-col gap-4 rounded-xl border p-5">
         <p className="text-muted-foreground text-sm">
           Upload an Excel file (.xlsx) with columns for Title, Slug, SKU, Status, Price, Sale Price,
-          Stock, Low Stock Threshold, Short Description, and Description. Category and photos
+          Stock, Low Stock Threshold, Description, and Product Highlights. Category and photos
           aren&apos;t part of this file — add those per product afterward from the products list.
         </p>
 

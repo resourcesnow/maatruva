@@ -1,19 +1,25 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Preloader } from "@/components/motion/preloader";
 
-// isLoading starts true so the server-rendered HTML and the client's first hydration pass
-// agree (no mismatch). The effect below only runs once hydration has actually completed —
-// not a fixed timeout — so the preloader's exit is tied to genuine page readiness. Pages in
-// this app fetch their data server-side (Server Components), so hydration completing is
-// already the point real content is interactive; there's no further client-side fetch to
-// wait for.
+// This is a branded moment, not just a loading spinner — on a fast connection real hydration
+// can complete in well under 100ms, which would cut the entrance choreography off before it's
+// even visible. MIN_DISPLAY_MS guarantees it's seen at least once; real hydration readiness is
+// still the ceiling, so a genuinely slow load is never held up any longer than it already is.
+const MIN_DISPLAY_MS = 600;
+
 export function PreloaderGate({ children }: { children: React.ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
+  // Captured on the client's first render, i.e. the moment hydration for this subtree starts —
+  // the baseline the floor is measured from.
+  const mountedAt = useRef(Date.now());
 
   useEffect(() => {
-    setIsLoading(false);
+    const elapsed = Date.now() - mountedAt.current;
+    const remaining = Math.max(0, MIN_DISPLAY_MS - elapsed);
+    const timer = setTimeout(() => setIsLoading(false), remaining);
+    return () => clearTimeout(timer);
   }, []);
 
   return (
